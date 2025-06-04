@@ -356,7 +356,7 @@
     <div class="scoreboard-container">
         <h1 class="text-4xl font-extrabold text-center text-blue-800 mb-6">SENAC PAULISTA</h1>
         <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Placar dos Jogos</h1>
-        <div class="user-id-display" id="userIdDisplay">Modo Offline (dados não persistidos)</div>
+        <div class="user-id-display" id="userIdDisplay">Dados salvos localmente no navegador</div>
         <div class="status-message hidden" id="statusMessage"></div>
 
         <div class="timer-container">
@@ -412,6 +412,7 @@
         const emptyStateMessage = document.getElementById('emptyState');
         const scoreboardBody = document.getElementById('scoreboard-body');
         const gridHeader = document.getElementById('gridHeader');
+        const userIdDisplay = document.getElementById('userIdDisplay'); // Get the user ID display element
 
         // Timer variables
         let timerInterval = null;
@@ -429,10 +430,91 @@
         const addModalityBtn = document.getElementById('addModalityBtn');
         const currentModalitiesContainer = document.getElementById('currentModalities');
 
-        // Função para gerar um ID único simples (para uso local)
+        // Function to generate a simple unique ID (for local use)
         function generateUniqueId() {
             return '_' + Math.random().toString(36).substr(2, 9);
         }
+
+        // --- Persistence Functions (localStorage) ---
+        function saveData() {
+            try {
+                localStorage.setItem('allTeams', JSON.stringify(allTeams));
+                localStorage.setItem('allModalities', JSON.stringify(allModalities));
+                localStorage.setItem('timerElapsedTime', elapsedTime.toString());
+                localStorage.setItem('timerIsRunning', isRunning.toString());
+                localStorage.setItem('timerStartTime', startTime.toString());
+                userIdDisplay.textContent = 'Dados salvos localmente no navegador'; // Update message
+            } catch (e) {
+                console.error("Error saving data to localStorage:", e);
+                showStatusMessage("Erro ao salvar dados localmente. Verifique o espaço de armazenamento do navegador.", 'error');
+            }
+        }
+
+        function loadData() {
+            try {
+                const storedTeams = localStorage.getItem('allTeams');
+                const storedModalities = localStorage.getItem('allModalities');
+                const storedElapsedTime = localStorage.getItem('timerElapsedTime');
+                const storedIsRunning = localStorage.getItem('timerIsRunning');
+                const storedStartTime = localStorage.getItem('timerStartTime');
+
+                if (storedTeams) {
+                    allTeams = JSON.parse(storedTeams);
+                } else {
+                    allTeams = [];
+                }
+
+                if (storedModalities) {
+                    allModalities = JSON.parse(storedModalities);
+                    // Ensure modalities have an 'order' property for sorting, or add it if missing
+                    allModalities.forEach((m, index) => {
+                        if (m.order === undefined) {
+                            m.order = index + 1;
+                        }
+                    });
+                    allModalities.sort((a, b) => a.order - b.order);
+                } else {
+                    allModalities = [];
+                }
+
+                if (storedElapsedTime) {
+                    elapsedTime = parseInt(storedElapsedTime, 10);
+                }
+                if (storedIsRunning === 'true') {
+                    isRunning = true;
+                } else {
+                    isRunning = false;
+                }
+                if (storedStartTime) {
+                    startTime = parseInt(storedStartTime, 10);
+                }
+
+                if (isRunning) {
+                    // If timer was running, restart it to continue from where it left off
+                    startTime = Date.now() - elapsedTime; // Recalculate startTime
+                    timerInterval = setInterval(updateTimerDisplay, 1000);
+                    startTimerBtn.disabled = true;
+                    pauseTimerBtn.disabled = false;
+                } else {
+                    // If not running, just update the display
+                    updateTimerDisplay();
+                }
+
+                userIdDisplay.textContent = 'Dados carregados do navegador'; // Update message
+            } catch (e) {
+                console.error("Error loading data from localStorage:", e);
+                showStatusMessage("Erro ao carregar dados localmente. Os dados podem estar corrompidos.", 'error');
+                // Clear corrupted data if unable to parse
+                localStorage.clear();
+                allTeams = [];
+                allModalities = [];
+                elapsedTime = 0;
+                isRunning = false;
+                startTime = 0;
+            }
+        }
+        // --- End Persistence Functions ---
+
 
         // Function to display status messages
         function showStatusMessage(message, type = 'status') {
@@ -490,6 +572,7 @@
             const currentTime = Date.now();
             const currentElapsedTime = elapsedTime + (isRunning ? (currentTime - startTime) : 0);
             timerDisplay.textContent = formatTime(currentElapsedTime);
+            saveData(); // Save timer state on update
         }
 
         function startTimer() {
@@ -499,6 +582,7 @@
                 isRunning = true;
                 startTimerBtn.disabled = true;
                 pauseTimerBtn.disabled = false;
+                saveData(); // Save timer state
             }
         }
 
@@ -509,6 +593,7 @@
                 isRunning = false;
                 startTimerBtn.disabled = false;
                 pauseTimerBtn.disabled = true;
+                saveData(); // Save timer state
             }
         }
 
@@ -519,16 +604,13 @@
             timerDisplay.textContent = formatTime(0);
             startTimerBtn.disabled = false;
             pauseTimerBtn.disabled = true;
+            saveData(); // Save timer state
         }
 
         // Add event listeners for timer buttons
         startTimerBtn.addEventListener('click', startTimer);
         pauseTimerBtn.addEventListener('click', pauseTimer);
         resetTimerBtn.addEventListener('click', resetTimer);
-
-        // Initialize pause button as disabled when page loads
-        pauseTimerBtn.disabled = true;
-
 
         // Function to calculate total score for a team
         function calculateTotal(teamData) {
@@ -663,17 +745,22 @@
             newTeamData.total = calculateTotal(newTeamData); // Recalculate total
 
             allTeams[teamIndex] = newTeamData; // Update the local array
+            saveData(); // Save data after every update
             renderScoreboard(); // Re-render the entire scoreboard to update totals and order
 
             // Show save feedback - this part might be tricky with full re-renders
             // For now, let's keep it simple, as the whole row is recreated.
             // A more advanced solution would be to update the specific cell without re-rendering the whole row.
-            const saveFeedback = rowElement.querySelector('.save-feedback'); // This row might not exist after re-render!
-            if (saveFeedback) { // This check is crucial
-                 saveFeedback.classList.add('visible');
-                 setTimeout(() => {
-                     saveFeedback.classList.remove('visible');
-                 }, 1500);
+            // If you want feedback, you might need to find the new row after re-render based on team.id
+            const updatedRowElement = scoreboardBody.querySelector(`[data-id="${teamId}"]`);
+            if (updatedRowElement) {
+                const saveFeedback = updatedRowElement.querySelector('.save-feedback');
+                if (saveFeedback) {
+                     saveFeedback.classList.add('visible');
+                     setTimeout(() => {
+                         saveFeedback.classList.remove('visible');
+                     }, 1500);
+                }
             }
         }
 
@@ -692,17 +779,17 @@
                 total: 0,
             };
             allTeams.push(newTeam);
+            saveData(); // Save data after adding team
             renderScoreboard(); // Re-render to show the new team
             showStatusMessage("Nova turma adicionada com sucesso!");
         });
 
         // Function to delete a team
         function deleteTeam(teamId) {
-            showConfirmationModal('Tem certeza que deseja remover esta turma? Esta ação é irreversível.', () => {
-                allTeams = allTeams.filter(team => team.id !== teamId);
-                renderScoreboard(); // Re-render after deletion
-                showStatusMessage("Turma eliminada com sucesso!");
-            });
+            allTeams = allTeams.filter(team => team.id !== teamId);
+            saveData(); // Save data after deletion
+            renderScoreboard(); // Re-render after deletion
+            showStatusMessage("Turma eliminada com sucesso!");
         }
 
         // Function to reset all scores
@@ -714,6 +801,7 @@
                     }
                     team.total = calculateTotal(team); // Recalculate total
                 });
+                saveData(); // Save data after reset
                 renderScoreboard(); // Re-render with reset scores
                 showStatusMessage("Todas as pontuações foram reiniciadas com sucesso!");
             });
@@ -739,6 +827,7 @@
             };
             allModalities.push(newModality);
             allModalities.sort((a,b) => a.order - b.order); // Ensure order is maintained
+            saveData(); // Save data after adding modality
             renderCurrentModalities(); // Re-render modality tags
 
             // Update existing teams with the new modality score initialized to 0
@@ -765,6 +854,7 @@
             const modalityIndex = allModalities.findIndex(m => m.id === modalityId);
             if (modalityIndex !== -1) {
                 allModalities[modalityIndex].name = trimmedName;
+                saveData(); // Save data after updating modality
                 renderCurrentModalities(); // Re-render modality tags
                 renderScoreboard(); // Re-render scoreboard header and team rows with updated modality name
                 showStatusMessage(`Modalidade atualizada para "${trimmedName}" com sucesso!`);
@@ -774,6 +864,7 @@
         function deleteModality(modalityId, modalityName) {
             showConfirmationModal(`Tem certeza que deseja excluir a modalidade "${modalityName}"? Isso removerá todas as pontuações associadas a ela para todas as turmas.`, () => {
                 allModalities = allModalities.filter(modality => modality.id !== modalityId);
+                saveData(); // Save data after deleting modality
                 renderCurrentModalities(); // Re-render modality tags
 
                 // Remove modality score from all teams
@@ -909,10 +1000,10 @@
 
         // Initial load of the scoreboard when the DOM is ready
         document.addEventListener('DOMContentLoaded', () => {
-            // Render initial state (empty or with placeholder data if you want)
+            loadData(); // Load data first
             renderScoreboard();
             renderCurrentModalities(); // Also render modalities
-            pauseTimerBtn.disabled = true; // Ensure pause button is disabled on load
+            // Timer button state will be handled by loadData based on stored isRunning
         });
     </script>
 </body>
