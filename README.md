@@ -3,9 +3,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Placar dos Jogos</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inter Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -103,10 +101,6 @@
             cursor: pointer;
             transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .add-team-btn, #addModalityBtn {
-            background-color: #FF9800; /* Medium Orange */
-            color: white;
         }
         .add-team-btn:hover, #addModalityBtn:hover {
             background-color: #F57C00; /* Dark Orange */
@@ -362,10 +356,9 @@
     <div class="scoreboard-container">
         <h1 class="text-4xl font-extrabold text-center text-blue-800 mb-6">SENAC PAULISTA</h1>
         <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Placar dos Jogos</h1>
-        <div class="user-id-display" id="userIdDisplay">Carregando ID do usuário...</div>
+        <div class="user-id-display" id="userIdDisplay">Modo Offline (dados não persistidos)</div>
         <div class="status-message hidden" id="statusMessage"></div>
 
-        <!-- Timer Section -->
         <div class="timer-container">
             <div id="timerDisplay">00:00:00</div>
             <div class="timer-buttons">
@@ -374,9 +367,6 @@
                 <button id="resetTimerBtn" class="bg-red-600 text-white">Reiniciar</button>
             </div>
         </div>
-        <!-- End Timer Section -->
-
-        <!-- Modality Manager Section -->
         <div class="modality-manager-container">
             <h2 class="text-xl font-semibold text-gray-700 mb-4">Gerenciar Modalidades</h2>
             <div class="flex flex-wrap items-center gap-4 mb-4">
@@ -384,22 +374,17 @@
                 <button id="addModalityBtn" class="add-team-btn modality-btn">Adicionar Modalidade</button>
             </div>
             <div id="currentModalities" class="flex flex-wrap gap-2">
-                <!-- Current modalities will be displayed here as tags with edit/delete buttons -->
-            </div>
+                </div>
         </div>
-        <!-- End Modality Manager Section -->
-
         <div class="grid-header" id="gridHeader">
-            <!-- Header cells will be injected here by JavaScript -->
-        </div>
+            </div>
 
         <div id="scoreboard-body">
-            <div id="loadingIndicator" class="empty-state-message">Carregando placar...</div>
+            <div id="loadingIndicator" class="empty-state-message hidden">Carregando placar...</div>
             <div id="emptyState" class="empty-state-message hidden">
                 Nenhuma turma adicionada ainda. Clique em "Adicionar Turma" para começar!
             </div>
-            <!-- Team rows will be injected here by JavaScript -->
-        </div>
+            </div>
 
         <div class="button-group">
             <button id="addTeamBtn" class="add-team-btn">Adicionar Turma</button>
@@ -407,7 +392,6 @@
         </div>
     </div>
 
-    <!-- Modal for confirmation -->
     <div id="confirmationModal" class="modal hidden">
         <div class="modal-content">
             <p id="modalMessage" class="text-lg font-semibold text-gray-700 mb-4"></p>
@@ -418,19 +402,10 @@
         </div>
     </div>
 
-    <!-- Firebase SDK -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, addDoc, updateDoc, deleteDoc, onSnapshot, collection, getDocs, writeBatch, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Global variables for Firebase
-        let app;
-        let db;
-        let auth;
-        let userId = 'anonymous'; // Default to anonymous
-        let isAuthReady = false;
-        let initialLoadComplete = false;
+        // Variáveis para armazenar dados localmente
+        let allTeams = [];
+        let allModalities = [];
 
         const statusMessageElement = document.getElementById('statusMessage');
         const loadingIndicator = document.getElementById('loadingIndicator');
@@ -450,10 +425,14 @@
         const resetTimerBtn = document.getElementById('resetTimerBtn');
 
         // Modality variables
-        let allModalities = []; // Stores fetched modalities
         const newModalityNameInput = document.getElementById('newModalityName');
         const addModalityBtn = document.getElementById('addModalityBtn');
         const currentModalitiesContainer = document.getElementById('currentModalities');
+
+        // Função para gerar um ID único simples (para uso local)
+        function generateUniqueId() {
+            return '_' + Math.random().toString(36).substr(2, 9);
+        }
 
         // Function to display status messages
         function showStatusMessage(message, type = 'status') {
@@ -496,59 +475,10 @@
             });
         }
 
-        // Initialize Firebase and set up authentication
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-
-                // Debugging: Log initial Firebase config and auth token presence
-                console.log("Firebase Config:", firebaseConfig);
-                console.log("Initial Auth Token Present:", typeof __initial_auth_token !== 'undefined' && __initial_auth_token);
-
-                // Listen for auth state changes
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        document.getElementById('userIdDisplay').textContent = `Seu ID de Usuário: ${userId}`;
-                        isAuthReady = true;
-                        console.log("Usuário autenticado:", userId);
-                        // Once authenticated, load scores and modalities
-                        loadModalities();
-                        loadScores();
-                    } else {
-                        // Sign in anonymously if no user is logged in
-                        console.log("Nenhum usuário autenticado, tentando autenticação anônima...");
-                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                            try {
-                                await signInWithCustomToken(auth, __initial_auth_token);
-                                console.log("Autenticado com token personalizado.");
-                            } catch (e) {
-                                console.error("Erro ao autenticar com token personalizado:", e);
-                                showStatusMessage(`Erro de autenticação: ${e.message}`, 'error');
-                                await signInAnonymously(auth); // Fallback to anonymous
-                            }
-                        } else {
-                            await signInAnonymously(auth);
-                            console.log("Autenticado anonimamente.");
-                        }
-                        // userId will be set by the onAuthStateChanged listener when signInAnonymously completes
-                    }
-                });
-
-            } catch (error) {
-                console.error("Erro ao inicializar Firebase ou autenticar:", error);
-                document.getElementById('userIdDisplay').textContent = `Erro ao carregar ID do usuário: ${error.message}`;
-                showStatusMessage(`Erro ao carregar o aplicativo: ${error.message}`, 'error');
-            }
-        });
-
         // Timer functions
         function formatTime(ms) {
             const totalSeconds = Math.floor(ms / 1000);
-            const hours = Math.floor(totalSeconds / 3600);
+            const hours = Math.floor((totalSeconds % 86400) / 3600); // Max 24 hours
             const minutes = Math.floor((totalSeconds % 3600) / 60);
             const seconds = totalSeconds % 60;
 
@@ -615,7 +545,7 @@
         function renderTeamRow(team) {
             const row = document.createElement('div');
             row.className = 'grid-row';
-            row.dataset.id = team.id; // Store Firestore document ID
+            row.dataset.id = team.id; // Store unique ID
 
             // Set grid-template-columns dynamically based on modalities
             const numModalityColumns = allModalities.length;
@@ -661,7 +591,7 @@
                     clearTimeout(timeoutId);
                     timeoutId = setTimeout(() => {
                         updateTeamScore(team.id, row);
-                    }, 500); // Debounce input to avoid too many Firestore writes
+                    }, 500); // Debounce input to avoid too many updates
                 });
             });
 
@@ -681,17 +611,20 @@
             if (removeButton) {
                 removeButton.addEventListener('click', () => {
                     console.log(`[renderTeamRow] Remove button clicked for team ID: ${team.id}`);
-                    showConfirmationModal('Tem certeza que deseja remover esta turma? Esta ação é irreversível.', () => deleteTeam(team.id));
+                    showConfirmationModal('Tem certeza que deseja remover esta turma? Esta ação é irreversível.', () => {
+                        console.log(`[deleteTeam] Confirmação recebida para remover turma com ID: ${team.id}`);
+                        deleteTeam(team.id);
+                    });
                 });
             } else {
                 console.error("[renderTeamRow] Remove button not found for team:", team.id);
             }
 
             // Event listener for saving team name on blur or Enter
-            const saveTeamName = async () => {
+            const saveTeamName = () => {
                 const newName = teamNameInput.value.trim();
                 if (newName && newName !== teamNameDisplay.textContent) {
-                    await updateTeamScore(team.id, row); // This will update the name in Firestore
+                    updateTeamScore(team.id, row); // This will update the name
                 }
                 // Revert to display mode
                 teamNameDisplay.textContent = teamNameInput.value;
@@ -707,11 +640,11 @@
             });
         }
 
-        // Function to update team score in Firestore
-        async function updateTeamScore(teamId, rowElement) {
-            if (!isAuthReady) {
-                console.log("[updateTeamScore] Autenticação não pronta. Não é possível atualizar o placar.");
-                showStatusMessage("Autenticação não pronta. Tente novamente em breve.", 'error');
+        // Function to update team score in local array
+        function updateTeamScore(teamId, rowElement) {
+            const teamIndex = allTeams.findIndex(t => t.id === teamId);
+            if (teamIndex === -1) {
+                showStatusMessage("Erro: Turma não encontrada.", 'error');
                 return;
             }
 
@@ -723,145 +656,71 @@
             });
 
             const newTeamData = {
+                id: teamId,
                 name: teamName,
                 scores: updatedScores,
-                updatedAt: new Date()
             };
             newTeamData.total = calculateTotal(newTeamData); // Recalculate total
 
-            try {
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                const teamRef = doc(db, `artifacts/${appId}/public/data/scoreboards`, teamId);
-                console.log(`[updateTeamScore] Attempting to update team document at path: artifacts/${appId}/public/data/scoreboards/${teamId}`);
-                await updateDoc(teamRef, newTeamData);
-                console.log("[updateTeamScore] Placar da equipe atualizado com sucesso:", teamId);
+            allTeams[teamIndex] = newTeamData; // Update the local array
+            renderScoreboard(); // Re-render the entire scoreboard to update totals and order
 
-                // Show save feedback
-                const saveFeedback = rowElement.querySelector('.save-feedback');
-                if (saveFeedback) {
-                    saveFeedback.classList.add('visible');
-                    setTimeout(() => {
-                        saveFeedback.classList.remove('visible');
-                    }, 1500); // Hide after 1.5 seconds
-                }
-            } catch (e) {
-                console.error("[updateTeamScore] Erro ao atualizar o placar da equipe:", e);
-                showStatusMessage(`Erro ao salvar: ${e.message}`, 'error');
+            // Show save feedback - this part might be tricky with full re-renders
+            // For now, let's keep it simple, as the whole row is recreated.
+            // A more advanced solution would be to update the specific cell without re-rendering the whole row.
+            const saveFeedback = rowElement.querySelector('.save-feedback'); // This row might not exist after re-render!
+            if (saveFeedback) { // This check is crucial
+                 saveFeedback.classList.add('visible');
+                 setTimeout(() => {
+                     saveFeedback.classList.remove('visible');
+                 }, 1500);
             }
         }
 
         // Function to add a new team
-        document.getElementById('addTeamBtn').addEventListener('click', async () => {
-            if (!isAuthReady) {
-                console.log("[addTeamBtn] Autenticação não pronta. Não é possível adicionar equipe.");
-                showStatusMessage("Autenticação não pronta. Tente novamente em breve.", 'error');
-                return;
-            }
-            try {
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                const initialScores = {};
-                allModalities.forEach(modality => {
-                    initialScores[modality.id] = 0;
-                });
+        document.getElementById('addTeamBtn').addEventListener('click', () => {
+            const newTeamId = generateUniqueId();
+            const initialScores = {};
+            allModalities.forEach(modality => {
+                initialScores[modality.id] = 0;
+            });
 
-                const newTeamRef = await addDoc(collection(db, `artifacts/${appId}/public/data/scoreboards`), {
-                    name: `Nova Equipe ${Date.now().toString().slice(-4)}`,
-                    scores: initialScores,
-                    total: 0,
-                    createdAt: new Date(),
-                    updatedAt: new Date()
-                });
-                console.log("[addTeamBtn] Nova equipe adicionada com ID:", newTeamRef.id);
-                showStatusMessage("Nova turma adicionada com sucesso!");
-            } catch (e) {
-                console.error("[addTeamBtn] Erro ao adicionar nova equipe:", e);
-                showStatusMessage(`Erro ao adicionar turma: ${e.message}`, 'error');
-            }
+            const newTeam = {
+                id: newTeamId,
+                name: `Nova Equipe ${allTeams.length + 1}`,
+                scores: initialScores,
+                total: 0,
+            };
+            allTeams.push(newTeam);
+            renderScoreboard(); // Re-render to show the new team
+            showStatusMessage("Nova turma adicionada com sucesso!");
         });
 
         // Function to delete a team
-        async function deleteTeam(teamId) {
-            console.log(`[deleteTeam] Início da função deleteTeam para o ID: ${teamId}`);
-            if (!isAuthReady) {
-                console.log("[deleteTeam] Autenticação não pronta. Não é possível excluir equipe.");
-                showStatusMessage("Autenticação não pronta. Tente novamente em breve.", 'error');
-                return;
-            }
-            if (!db) {
-                console.error("[deleteTeam] Instância do Firestore DB não disponível.");
-                showStatusMessage("Erro interno: Banco de dados não disponível.", 'error');
-                return;
-            }
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            console.log(`[deleteTeam] A tentar eliminar o documento da equipa no caminho: artifacts/${appId}/public/data/scoreboards/${teamId}`);
-            try {
-                await deleteDoc(doc(db, `artifacts/${appId}/public/data/scoreboards`, teamId));
-                console.log("[deleteTeam] Equipa eliminada do Firestore com sucesso:", teamId);
+        function deleteTeam(teamId) {
+            showConfirmationModal('Tem certeza que deseja remover esta turma? Esta ação é irreversível.', () => {
+                allTeams = allTeams.filter(team => team.id !== teamId);
+                renderScoreboard(); // Re-render after deletion
                 showStatusMessage("Turma eliminada com sucesso!");
-            } catch (e) {
-                console.error("[deleteTeam] Erro ao eliminar equipa:", e);
-                showStatusMessage(`Erro ao eliminar turma: ${e.message}`, 'error');
-            }
+            });
         }
 
         // Function to reset all scores
         document.getElementById('resetScoresBtn').addEventListener('click', () => {
-            console.log("[resetScoresBtn] Botão Reiniciar clicado."); // Debugging log
-            showConfirmationModal('Tem certeza que deseja reiniciar todas as pontuações para zero? Esta ação é irreversível.', async () => {
-                if (!isAuthReady) {
-                    console.log("[resetScoresBtn] Autenticação não pronta. Não é possível reiniciar placar.");
-                    showStatusMessage("Autenticação não pronta. Tente novamente em breve.", 'error');
-                    return;
-                }
-                if (!db) {
-                    console.error("[resetScoresBtn] Instância do Firestore DB não disponível.");
-                    showStatusMessage("Erro interno: Banco de dados não disponível.", 'error');
-                    return;
-                }
-                try {
-                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                    console.log(`[resetScoresBtn] A consultar equipas de: artifacts/${appId}/public/data/scoreboards`);
-                    const q = collection(db, `artifacts/${appId}/public/data/scoreboards`);
-                    const querySnapshot = await getDocs(q);
-                    console.log(`[resetScoresBtn] Encontradas ${querySnapshot.size} equipas para reiniciar.`);
-
-                    if (querySnapshot.empty) {
-                        console.log("[resetScoresBtn] Nenhuma turma encontrada para reiniciar.");
-                        showStatusMessage("Nenhuma turma encontrada para reiniciar.", 'status');
-                        return;
+            showConfirmationModal('Tem certeza que deseja reiniciar todas as pontuações para zero? Esta ação é irreversível.', () => {
+                allTeams.forEach(team => {
+                    for (const modalityId in team.scores) {
+                        team.scores[modalityId] = 0;
                     }
-
-                    const batch = writeBatch(db); // Use batch writes for efficiency
-                    querySnapshot.forEach((docSnapshot) => {
-                        const teamRef = doc(db, `artifacts/${appId}/public/data/scoreboards`, docSnapshot.id);
-                        const currentScores = docSnapshot.data().scores || {};
-                        const resetScores = {};
-                        for (const modalityId in currentScores) {
-                            resetScores[modalityId] = 0;
-                        }
-                        batch.update(teamRef, {
-                            scores: resetScores,
-                            total: 0,
-                            updatedAt: new Date()
-                        });
-                        console.log(`[resetScoresBtn] A adicionar equipa ${docSnapshot.id} ao lote para reiniciar.`);
-                    });
-                    await batch.commit();
-                    console.log("[resetScoresBtn] Todas as pontuações foram reiniciadas com sucesso.");
-                    showStatusMessage("Todas as pontuações foram reiniciadas com sucesso!");
-                } catch (e) {
-                    console.error("[resetScoresBtn] Erro ao reiniciar placar:", e);
-                    showStatusMessage(`Erro ao reiniciar placar: ${e.message}`, 'error');
-                }
+                    team.total = calculateTotal(team); // Recalculate total
+                });
+                renderScoreboard(); // Re-render with reset scores
+                showStatusMessage("Todas as pontuações foram reiniciadas com sucesso!");
             });
         });
 
         // Modality Management Functions
-        async function addModality() {
-            if (!isAuthReady) {
-                showStatusMessage("Autenticação não pronta. Não é possível adicionar modalidade.", 'error');
-                return;
-            }
+        function addModality() {
             const modalityName = newModalityNameInput.value.trim();
             if (!modalityName) {
                 showStatusMessage("O nome da modalidade não pode estar vazio.", 'error');
@@ -872,44 +731,27 @@
                 return;
             }
 
-            try {
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                const newModalityRef = await addDoc(collection(db, `artifacts/${appId}/public/data/modalities`), {
-                    name: modalityName,
-                    order: allModalities.length + 1, // Simple ordering
-                    createdAt: new Date()
-                });
-                console.log("[addModality] Nova modalidade adicionada:", newModalityRef.id);
-                showStatusMessage(`Modalidade "${modalityName}" adicionada com sucesso!`);
-                newModalityNameInput.value = ''; // Clear input
+            const newModalityId = generateUniqueId();
+            const newModality = {
+                id: newModalityId,
+                name: modalityName,
+                order: allModalities.length + 1,
+            };
+            allModalities.push(newModality);
+            allModalities.sort((a,b) => a.order - b.order); // Ensure order is maintained
+            renderCurrentModalities(); // Re-render modality tags
 
-                // Update existing teams with the new modality score initialized to 0
-                const teamsSnapshot = await getDocs(collection(db, `artifacts/${appId}/public/data/scoreboards`));
-                const batch = writeBatch(db);
-                teamsSnapshot.forEach(docSnapshot => {
-                    const teamRef = doc(db, `artifacts/${appId}/public/data/scoreboards`, docSnapshot.id);
-                    const currentScores = docSnapshot.data().scores || {};
-                    currentScores[newModalityRef.id] = 0; // Use modality ID as key
-                    batch.update(teamRef, {
-                        scores: currentScores,
-                        total: calculateTotal({ scores: currentScores }), // Recalculate total
-                        updatedAt: new Date()
-                    });
-                });
-                await batch.commit();
-                console.log("[addModality] Equipas existentes atualizadas com a nova modalidade.");
-
-            } catch (e) {
-                console.error("[addModality] Erro ao adicionar modalidade:", e);
-                showStatusMessage(`Erro ao adicionar modalidade: ${e.message}`, 'error');
-            }
+            // Update existing teams with the new modality score initialized to 0
+            allTeams.forEach(team => {
+                team.scores[newModalityId] = 0;
+                team.total = calculateTotal(team); // Recalculate total
+            });
+            renderScoreboard(); // Re-render teams with new column
+            showStatusMessage(`Modalidade "${modalityName}" adicionada com sucesso!`);
+            newModalityNameInput.value = ''; // Clear input
         }
 
-        async function updateModality(modalityId, newName) {
-            if (!isAuthReady) {
-                showStatusMessage("Autenticação não pronta. Não é possível atualizar modalidade.", 'error');
-                return;
-            }
+        function updateModality(modalityId, newName) {
             const trimmedName = newName.trim();
             if (!trimmedName) {
                 showStatusMessage("O nome da modalidade não pode estar vazio.", 'error');
@@ -920,58 +762,29 @@
                 return;
             }
 
-            try {
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                const modalityRef = doc(db, `artifacts/${appId}/public/data/modalities`, modalityId);
-                console.log(`[updateModality] A atualizar documento de modalidade no caminho: artifacts/${appId}/public/data/modalities/${modalityId}`);
-                await updateDoc(modalityRef, { name: trimmedName, updatedAt: new Date() });
-                console.log("[updateModality] Modalidade atualizada:", modalityId);
+            const modalityIndex = allModalities.findIndex(m => m.id === modalityId);
+            if (modalityIndex !== -1) {
+                allModalities[modalityIndex].name = trimmedName;
+                renderCurrentModalities(); // Re-render modality tags
+                renderScoreboard(); // Re-render scoreboard header and team rows with updated modality name
                 showStatusMessage(`Modalidade atualizada para "${trimmedName}" com sucesso!`);
-            } catch (e) {
-                console.error("[updateModality] Erro ao atualizar modalidade:", e);
-                showStatusMessage(`Erro ao atualizar modalidade: ${e.message}`, 'error');
             }
         }
 
-        async function deleteModality(modalityId, modalityName) {
-            console.log(`[deleteModality] A tentar eliminar modalidade: ${modalityId} - ${modalityName}`);
-            showConfirmationModal(`Tem certeza que deseja excluir a modalidade "${modalityName}"? Isso removerá todas as pontuações associadas a ela para todas as turmas.`, async () => {
-                if (!isAuthReady) {
-                    console.log("[deleteModality] Autenticação não pronta. Não é possível excluir modalidade.");
-                    showStatusMessage("Autenticação não pronta. Tente novamente em breve.", 'error');
-                    return;
-                }
-                try {
-                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                    const modalityDocRef = doc(db, `artifacts/${appId}/public/data/modalities`, modalityId);
-                    console.log(`[deleteModality] A eliminar documento de modalidade no caminho: artifacts/${appId}/public/data/modalities/${modalityId}`);
-                    await deleteDoc(modalityDocRef);
-                    console.log("[deleteModality] Modalidade eliminada do Firestore com sucesso:", modalityId);
-                    showStatusMessage(`Modalidade "${modalityName}" eliminada com sucesso!`);
+        function deleteModality(modalityId, modalityName) {
+            showConfirmationModal(`Tem certeza que deseja excluir a modalidade "${modalityName}"? Isso removerá todas as pontuações associadas a ela para todas as turmas.`, () => {
+                allModalities = allModalities.filter(modality => modality.id !== modalityId);
+                renderCurrentModalities(); // Re-render modality tags
 
-                    // Remove modality score from all teams
-                    const teamsSnapshot = await getDocs(collection(db, `artifacts/${appId}/public/data/scoreboards`));
-                    const batch = writeBatch(db);
-                    console.log("[deleteModality] A atualizar pontuações para equipas existentes...");
-                    teamsSnapshot.forEach(docSnapshot => {
-                        const teamRef = doc(db, `artifacts/${appId}/public/data/scoreboards`, docSnapshot.id);
-                        const currentScores = { ...docSnapshot.data().scores || {} };
-                        if (currentScores.hasOwnProperty(modalityId)) {
-                            delete currentScores[modalityId]; // Remove the score for this modality
-                        }
-                        batch.update(teamRef, {
-                            scores: currentScores,
-                            total: calculateTotal({ scores: currentScores }), // Recalculate total
-                            updatedAt: new Date()
-                        });
-                    });
-                    await batch.commit();
-                    console.log("[deleteModality] Pontuações da modalidade removidas das equipas e totais recalculados.");
-
-                } catch (e) {
-                    console.error("[deleteModality] Erro ao excluir modalidade:", e);
-                    showStatusMessage(`Erro ao excluir modalidade: ${e.message}`, 'error');
-                }
+                // Remove modality score from all teams
+                allTeams.forEach(team => {
+                    if (team.scores.hasOwnProperty(modalityId)) {
+                        delete team.scores[modalityId]; // Remove the score for this modality
+                    }
+                    team.total = calculateTotal(team); // Recalculate total
+                });
+                renderScoreboard(); // Re-render teams with removed column
+                showStatusMessage(`Modalidade "${modalityName}" eliminada com sucesso!`);
             });
         }
 
@@ -1013,6 +826,7 @@
                 editBtn.addEventListener('click', () => {
                     // Prevent editing if already editing another tag
                     if (document.querySelector('.modality-tag.editing')) {
+                        showStatusMessage("Já está a editar outra modalidade. Salve ou cancele primeiro.", "status");
                         return;
                     }
 
@@ -1033,24 +847,24 @@
                     editBtn.classList.add('hidden');
                     deleteBtn.classList.add('hidden');
 
-                    const saveChanges = async () => {
+                    const saveChanges = () => {
                         const newName = input.value.trim();
                         if (newName && newName !== modality.name) { // Only update if name has changed
-                            await updateModality(modality.id, newName);
+                            updateModality(modality.id, newName);
+                        } else {
+                            // If name didn't change or was empty, just revert
+                            tag.classList.remove('editing');
+                            tag.replaceChild(nameDisplay, input); // Replace input with text span
+                            nameDisplay.textContent = modality.name; // Revert to original name
+                            editBtn.classList.remove('hidden');
+                            deleteBtn.classList.remove('hidden');
                         }
-                        tag.classList.remove('editing');
-                        tag.replaceChild(nameDisplay, input); // Replace input with text span
-                        nameDisplay.textContent = newName; // Update display immediately
-
-                        // Show buttons again after editing
-                        editBtn.classList.remove('hidden');
-                        deleteBtn.classList.remove('hidden');
                     };
 
                     input.addEventListener('blur', saveChanges); // Save on blur
                     input.addEventListener('keypress', (e) => {
                         if (e.key === 'Enter') {
-                            saveChanges(); // Save on Enter key press
+                            input.blur(); // Trigger blur to save changes
                         }
                     });
                 });
@@ -1064,97 +878,42 @@
             });
         }
 
-        // Load and listen for real-time updates on modalities
-        function loadModalities() {
-            if (!isAuthReady) {
-                console.log("[loadModalities] Autenticação não pronta. Não é possível carregar modalidades.");
-                return;
-            }
-            try {
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                const q = query(collection(db, `artifacts/${appId}/public/data/modalities`), orderBy('order'));
-                onSnapshot(q, async (snapshot) => {
-                    const fetchedModalities = [];
-                    snapshot.forEach((doc) => {
-                        fetchedModalities.push({ id: doc.id, ...doc.data() });
-                    });
-                    allModalities = fetchedModalities;
-                    console.log("[loadModalities] Modalidades atualizadas:", allModalities);
+        // Function to render the entire scoreboard from local data
+        function renderScoreboard() {
+            loadingIndicator.classList.add('hidden'); // Hide loading indicator once data is ready
 
-                    // No default modalities are created here. User will add them dynamically.
-                    renderCurrentModalities(); // Render modality tags
-                    loadScores(); // This will trigger a re-render of teams
-                }, (error) => {
-                    console.error("[loadModalities] Erro ao ouvir atualizações de modalidades:", error);
-                    showStatusMessage(`Erro ao carregar modalidades: ${error.message}`, 'error');
+            scoreboardBody.innerHTML = ''; // Clear current display
+            gridHeader.innerHTML = ''; // Clear header as well
+
+            // Render header dynamically
+            const numModalityColumns = allModalities.length;
+            gridHeader.style.gridTemplateColumns = `1.5fr repeat(${numModalityColumns}, 1fr) 1fr 0.75fr`;
+            gridHeader.innerHTML = `
+                <div class="grid-cell header-orange-text">EQUIPES</div>
+                ${allModalities.map(modality => `<div class="grid-cell header-orange-text">${modality.name}</div>`).join('')}
+                <div class="grid-cell header-orange-text">TOTAL</div>
+                <div class="grid-cell"></div> `;
+
+            // Sort teams by total score in descending order
+            allTeams.sort((a, b) => b.total - a.total);
+
+            if (allTeams.length === 0) {
+                emptyStateMessage.classList.remove('hidden');
+            } else {
+                emptyStateMessage.classList.add('hidden');
+                allTeams.forEach(team => {
+                    renderTeamRow(team); // This function now attaches listeners directly to the new row
                 });
-            } catch (e) {
-                console.error("[loadModalities] Erro ao configurar listener de modalidades:", e);
-                showStatusMessage(`Erro ao configurar modalidades: ${e.message}`, 'error');
             }
         }
 
-        // Removed createDefaultModalities function as per user request.
-        // async function createDefaultModalities() { ... }
-
-
-        // Function to load scores from Firestore and listen for real-time updates
-        function loadScores() {
-            if (!isAuthReady) {
-                console.log("[loadScores] Autenticação não pronta. Não é possível carregar placar.");
-                return;
-            }
-            try {
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                const q = collection(db, `artifacts/${appId}/public/data/scoreboards`);
-                onSnapshot(q, (snapshot) => {
-                    loadingIndicator.classList.add('hidden'); // Hide loading indicator once data starts coming
-                    initialLoadComplete = true;
-
-                    scoreboardBody.innerHTML = ''; // Clear current display
-                    gridHeader.innerHTML = ''; // Clear header as well
-
-                    // Render header dynamically
-                    const numModalityColumns = allModalities.length;
-                    // Adjusted grid-template-columns to accommodate both Edit and Remove buttons
-                    gridHeader.style.gridTemplateColumns = `1.5fr repeat(${numModalityColumns}, 1fr) 1fr 0.75fr`; // Team Name, Modalities, Total, Buttons
-                    gridHeader.innerHTML = `
-                        <div class="grid-cell header-orange-text">EQUIPES</div>
-                        ${allModalities.map(modality => `<div class="grid-cell header-orange-text">${modality.name}</div>`).join('')}
-                        <div class="grid-cell header-orange-text">TOTAL</div>
-                        <div class="grid-cell"></div> <!-- Empty cell for edit/remove buttons column -->
-                    `;
-
-
-                    const teams = [];
-                    snapshot.forEach((doc) => {
-                        const data = doc.data();
-                        teams.push({ id: doc.id, ...data });
-                    });
-
-                    // Sort teams by total score in descending order
-                    teams.sort((a, b) => b.total - a.total);
-
-                    if (teams.length === 0) {
-                        emptyStateMessage.classList.remove('hidden');
-                    } else {
-                        emptyStateMessage.classList.add('hidden');
-                        teams.forEach(team => {
-                            renderTeamRow(team);
-                        });
-                    }
-                    console.log("[loadScores] Placar atualizado do Firestore.");
-                }, (error) => {
-                    console.error("[loadScores] Erro ao ouvir atualizações do placar:", error);
-                    loadingIndicator.classList.add('hidden');
-                    showStatusMessage(`Erro ao carregar o placar: ${error.message}`, 'error');
-                });
-            } catch (e) {
-                console.error("[loadScores] Erro ao configurar listener do Firestore:", e);
-                loadingIndicator.classList.add('hidden');
-                showStatusMessage(`Erro ao configurar o placar: ${e.message}`, 'error');
-            }
-        }
+        // Initial load of the scoreboard when the DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            // Render initial state (empty or with placeholder data if you want)
+            renderScoreboard();
+            renderCurrentModalities(); // Also render modalities
+            pauseTimerBtn.disabled = true; // Ensure pause button is disabled on load
+        });
     </script>
 </body>
 </html>
