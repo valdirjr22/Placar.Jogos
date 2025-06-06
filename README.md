@@ -2,16 +2,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Placar dos Jogos</title>
+    <title>Placar dos Jogos SENAC</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
+        /* Estilos gerais do corpo e container principal */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #F0F4F8; /* Light blue-grey, almost white */
+            background-color: #F0F4F8; /* Azul-cinzento claro, quase branco */
             display: flex;
             justify-content: center;
-            align-items: flex-start; /* Align to top for better scrolling on smaller screens */
+            align-items: flex-start; /* Alinhar ao topo para melhor rolagem em telas menores */
             min-height: 100vh;
             padding: 20px;
             box-sizing: border-box;
@@ -23,161 +24,159 @@
             padding: 24px;
             max-width: 1200px;
             width: 100%;
-            overflow-x: auto; /* Enable horizontal scrolling for small screens */
+            overflow-x: auto; /* Habilitar rolagem horizontal para telas pequenas */
         }
+
+        /* Estilos da grade do placar (cabeçalho e linhas) */
         .grid-header, .grid-row {
             display: grid;
-            /* grid-template-columns will be set dynamically by JS */
-            gap: 8px;
-            padding: 12px 0;
+            gap: 8px; /* Espaçamento entre as células da grade */
+            padding: 10px 0;
+            border-bottom: 1px solid #E2E8F0; /* Linha divisória para as linhas */
             align-items: center;
-            text-align: center;
         }
         .grid-header {
-            background-color: #2196F3; /* Medium Blue */
-            color: white;
             font-weight: 700;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            padding: 12px 8px;
-            border: 1px solid #1976D2; /* Darker blue border */
-        }
-        .grid-header .header-orange-text {
-            color: #FF9800; /* Orange text for specific header cells */
+            background-color: #F8FAFC; /* Fundo mais claro para o cabeçalho */
+            border-radius: 8px 8px 0 0;
+            position: sticky; /* Tornar o cabeçalho fixo ao rolar */
+            top: 0;
+            z-index: 10; /* Garantir que fique acima de outros conteúdos */
         }
         .grid-cell {
             padding: 8px;
-            border-radius: 8px;
-            background-color: #E3F2FD; /* Light Blue */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-width: 80px; /* Minimum width for cells */
-        }
-        .grid-row:nth-child(even) .grid-cell {
-            background-color: #D1E6FA; /* Slightly darker light blue for even rows */
-        }
-        .grid-row input {
-            width: 100%;
-            padding: 6px;
-            border: 1px solid #90CAF9; /* Lighter blue border */
-            border-radius: 6px;
             text-align: center;
-            background-color: #ffffff;
-            font-weight: 600;
-            color: #333;
-            transition: border-color 0.2s ease;
+            white-space: nowrap; /* Evitar que o texto quebre a linha */
+            overflow: hidden;
+            text-overflow: ellipsis; /* Adicionar reticências para texto que transborda */
         }
-        .grid-row input:focus {
-            outline: none;
-            border-color: #FF9800; /* Orange focus */
-            box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.2);
-        }
-        .grid-row .team-name-display {
-            text-align: left;
-            padding-left: 12px;
-            font-weight: 700;
-            min-width: 120px; /* Ensure enough space for team names */
-            color: #333333; /* Dark grey text */
-            cursor: pointer; /* Indicate it's editable */
-        }
-        .grid-row .team-name-input {
-            text-align: left;
-            padding-left: 12px;
-            font-weight: 700;
-            min-width: 120px;
-            color: #333333;
-        }
-        .grid-row .total-score {
-            font-weight: 700;
-            color: #333333;
-            background-color: #FFECB3; /* Light Orange for total */
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.05); /* Subtle inner shadow */
-        }
-        .add-team-btn, .reset-btn, .edit-team-btn, .remove-team-btn, .modality-btn {
-            padding: 10px 16px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .add-team-btn:hover, #addModalityBtn:hover {
-            background-color: #F57C00; /* Dark Orange */
-            transform: translateY(-2px);
-            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
-        }
-        .reset-btn {
-            background-color: #1976D2; /* Dark Blue */
-            color: white;
-            margin-left: 10px;
-        }
-        .reset-btn:hover {
-            background-color: #1565C0; /* Even darker blue */
-            transform: translateY(-2px);
-            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
-        }
-        .edit-team-btn {
-            background-color: #2196F3; /* Medium Blue */
-            color: white;
-            padding: 6px 10px;
-            font-size: 0.875rem;
-            line-height: 1;
-            border-radius: 8px; /* Added border-radius for consistency */
-            box-shadow: none;
-        }
-        .edit-team-btn:hover {
-            background-color: #1976D2;
-            transform: scale(1.05);
-        }
-        .remove-team-btn {
-            background-color: #1976D2; /* Dark Blue for remove, consistent with reset */
-            color: white;
-            padding: 6px 10px;
-            font-size: 0.875rem;
-            line-height: 1;
-            border-radius: 8px; /* Added border-radius for consistency */
-            box-shadow: none;
-        }
-        .remove-team-btn:hover {
-            background-color: #1565C0;
-            transform: scale(1.05);
-        }
-        .button-group {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-            gap: 10px;
-        }
-        .user-id-display, .status-message {
-            background-color: #E3F2FD; /* Light Blue */
-            padding: 8px 12px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            font-size: 0.9rem;
-            color: #333333;
-            text-align: center;
-            word-break: break-all; /* Ensures long IDs wrap */
-        }
-        .status-message {
-            background-color: #FFF3E0; /* Light orange for status */
-            color: #E65100; /* Dark orange text */
-            border: 1px solid #FFB74D; /* Medium orange border */
-        }
-        .error-message {
-            background-color: #FFEBE9; /* Very light red for errors */
-            color: #C62828; /* Dark red text */
-            border: 1px solid #EF9A9A; /* Medium red border */
+        .header-orange-text {
+            color: #F97316; /* Laranja Tailwind-500 */
         }
 
-        /* Modal styles */
-        .modal {
+        /* Estilos dos inputs de equipe e pontuação */
+        .team-name-input {
+            width: 100%;
+            padding: 4px;
+            border: 1px solid #CBD5E0;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: 600;
+            color: #333;
+        }
+        .score-input {
+            width: 100%;
+            padding: 4px;
+            border: 1px solid #CBD5E0;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: 600;
+            color: #007BFF; /* Uma cor distinta para as pontuações */
+        }
+        .total-score {
+            font-weight: 700;
+            color: #10B981; /* Verde Tailwind-500 */
+            font-size: 1.1em;
+        }
+
+        /* Estilos dos botões de ação na linha da equipe */
+        .action-buttons {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+        }
+        .action-buttons button {
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .edit-team-btn {
+            background-color: #3B82F6; /* Azul Tailwind-500 */
+            color: white;
+        }
+        .edit-team-btn:hover:not(:disabled) {
+            background-color: #2563EB; /* Azul Tailwind-600 */
+        }
+        .remove-team-btn {
+            background-color: #EF4444; /* Vermelho Tailwind-500 */
+            color: white;
+        }
+        .remove-team-btn:hover:not(:disabled) {
+            background-color: #DC2626; /* Vermelho Tailwind-600 */
+        }
+
+        /* Estilos dos botões principais (adicionar equipe, reiniciar) */
+        .add-team-btn {
+            background-color: #10B981; /* Verde Tailwind-500 */
+            color: white;
+            padding: 12px 20px;
+            font-size: 1rem;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+        }
+        .add-team-btn:hover:not(:disabled) {
+            background-color: #059669; /* Verde Tailwind-600 */
+        }
+        .reset-btn {
+            background-color: #F59E0B; /* Âmbar Tailwind-500 */
+            color: white;
+            padding: 12px 20px;
+            font-size: 1rem;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+        }
+        .reset-btn:hover:not(:disabled) {
+            background-color: #D97706; /* Âmbar Tailwind-600 */
+        }
+
+        /* Mensagens de estado e carregamento */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #64748B;
+            font-style: italic;
+        }
+        .loading-indicator {
+            text-align: center;
+            padding: 40px;
+            color: #64748B;
+        }
+        .status-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #F97316; /* Laranja-500 */
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .status-message.error {
+            background-color: #EF4444; /* Vermelho-500 */
+        }
+        .status-message.show {
+            opacity: 1;
+        }
+        #userIdDisplay {
+            text-align: right;
+            font-size: 0.85em;
+            color: #64748B;
+            margin-bottom: 10px;
+        }
+
+        /* Estilos do modal de confirmação */
+        .modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.6); /* Darker overlay */
+            background-color: rgba(0, 0, 0, 0.6);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -186,7 +185,7 @@
             visibility: hidden;
             transition: opacity 0.3s ease, visibility 0.3s ease;
         }
-        .modal.visible {
+        .modal-overlay.show {
             opacity: 1;
             visibility: visible;
         }
@@ -194,18 +193,20 @@
             background-color: white;
             padding: 30px;
             border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); /* Stronger shadow */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             text-align: center;
             max-width: 400px;
             width: 90%;
             transform: translateY(-20px);
-            transition: transform 0.3s ease;
+            opacity: 0;
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
         }
-        .modal.visible .modal-content {
+        .modal-overlay.show .modal-content {
             transform: translateY(0);
+            opacity: 1;
         }
         .modal-buttons {
-            margin-top: 20px;
+            margin-top: 25px;
             display: flex;
             justify-content: center;
             gap: 15px;
@@ -215,227 +216,374 @@
             border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.2s ease;
         }
-        .modal-buttons .confirm-btn {
-            background-color: #FF9800; /* Orange confirm */
+        #modalConfirmBtn {
+            background-color: #EF4444; /* Vermelho-500 */
             color: white;
         }
-        .modal-buttons .confirm-btn:hover {
-            background-color: #F57C00;
-            transform: translateY(-1px);
+        #modalConfirmBtn:hover {
+            background-color: #DC2626; /* Vermelho-600 */
         }
-        .modal-buttons .cancel-btn {
-            background-color: #E0E0E0; /* Light grey cancel */
+        #modalCancelBtn {
+            background-color: #CBD5E0; /* Cinzento-300 */
+            color: #4A5568;
+        }
+        #modalCancelBtn:hover {
+            background-color: #A0AEC0; /* Cinzento-400 */
+        }
+        #modalMessage {
+            font-size: 1.1em;
             color: #333;
         }
-        .modal-buttons .cancel-btn:hover {
-            background-color: #BDBDBD;
-            transform: translateY(-1px);
-        }
-        .empty-state-message {
-            text-align: center;
-            padding: 40px;
-            color: #6b7280;
-            font-size: 1.1rem;
-            background-color: #f9fafb;
-            border-radius: 8px;
-            margin-top: 20px;
-            border: 1px dashed #d1d5db;
-        }
-        .save-feedback {
-            font-size: 0.75rem;
-            color: #2e7d32;
-            margin-left: 8px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        .save-feedback.visible {
-            opacity: 1;
-        }
-        /* Timer styles */
+
+        /* Estilos do Cronômetro de Jogo */
         .timer-container {
-            background-color: #E3F2FD; /* Light Blue */
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            background-color: #E0F2F7; /* Fundo azul claro */
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
             padding: 20px;
-            margin-bottom: 24px;
+            margin-bottom: 25px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
+            gap: 10px;
+            border: 2px solid #03A9F4; /* Borda azul claro */
         }
         #timerDisplay {
-            font-size: 3.5rem; /* Larger font for time */
+            font-size: 3.5rem; /* Tamanho da fonte maior */
             font-weight: 700;
-            color: #1976D2; /* Dark Blue */
+            color: #2196F3; /* Azul-500 */
             letter-spacing: 2px;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .timer-buttons {
+            display: flex;
+            gap: 10px;
         }
         .timer-buttons button {
-            padding: 12px 24px;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 1.1rem;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-            transition: all 0.3s ease;
-        }
-        .timer-buttons button:hover:not(:disabled) {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
         }
         .timer-buttons button:disabled {
             opacity: 0.6;
             cursor: not-allowed;
-            box-shadow: none;
         }
-        .timer-buttons .bg-green-600 { background-color: #FF9800; } /* Orange */
-        .timer-buttons .bg-green-600:hover:not(:disabled) { background-color: #F57C00; }
-        .timer-buttons .bg-yellow-600 { background-color: #2196F3; color: white; } /* Blue */
-        .timer-buttons .bg-yellow-600:hover:not(:disabled) { background-color: #1976D2; }
-        .timer-buttons .bg-red-600 { background-color: #1976D2; } /* Dark Blue */
-        .timer-buttons .bg-red-600:hover:not(:disabled) { background-color: #1565C0; }
+        .timer-buttons .bg-blue-600 { background-color: #2196F3; } /* Azul-500 */
+        .timer-buttons .bg-blue-600:hover:not(:disabled) { background-color: #1976D2; } /* Azul-700 */
+        .timer-buttons .bg-purple-600 { background-color: #9C27B0; } /* Roxo-500 */
+        .timer-buttons .bg-purple-600:hover:not(:disabled) { background-color: #7B1FA2; } /* Roxo-700 */
+        .timer-buttons .bg-red-600 { background-color: #F44336; } /* Vermelho-500 */
+        .timer-buttons .bg-red-600:hover:not(:disabled) { background-color: #D32F2F; } /* Vermelho-700 */
 
-        /* Modality Manager Styles */
+        /* Estilos do Gerenciador de Modalidades */
         .modality-manager-container {
-            background-color: #F0F4F8; /* Same as body background */
-            border-radius: 12px;
+            background-color: #F0FDF4; /* Fundo verde claro */
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
             padding: 20px;
-            margin-bottom: 24px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-top: 25px; /* Margem superior para separar do timer */
+            margin-bottom: 25px;
+            border: 2px solid #4CAF50; /* Borda verde */
+        }
+        .modality-manager-container h2 {
+            text-align: center;
+            color: #22C55E; /* Verde Tailwind-500 */
+            margin-bottom: 15px;
+        }
+        .modality-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        .modality-input-group input {
+            padding: 10px;
+            border: 1px solid #CBD5E0;
+            border-radius: 8px;
+            flex-grow: 1;
+            max-width: 300px;
+        }
+        .modality-input-group button {
+            background-color: #22C55E; /* Verde Tailwind-500 */
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .modality-input-group button:hover {
+            background-color: #16A34A; /* Verde Tailwind-600 */
+        }
+        #currentModalities {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
         }
         .modality-tag {
-            background-color: #FF9800; /* Orange */
-            color: white;
-            padding: 6px 12px;
+            background-color: #DBEAFE; /* Azul Tailwind-100 */
+            color: #1E40AF; /* Azul Tailwind-800 */
+            padding: 8px 12px;
             border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 0.9rem;
             transition: background-color 0.2s ease;
+            position: relative;
         }
-        .modality-tag:hover:not(.editing) {
-            background-color: #F57C00; /* Darker Orange on hover */
+        .modality-tag:hover {
+            background-color: #BFDBFE; /* Azul Tailwind-200 */
         }
-        .modality-tag .modality-name-display {
-            flex-grow: 1;
-            cursor: pointer; /* Indicate it's editable */
-        }
-        .modality-tag .modality-name-input {
-            background-color: white;
-            border: 1px solid #90CAF9; /* Lighter blue border */
-            border-radius: 4px;
-            padding: 2px 6px;
-            color: #333;
-            font-weight: 600;
-            width: auto; /* Adjust width dynamically */
-            min-width: 50px;
-            max-width: 150px; /* Limit max width */
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
-        }
-        .modality-tag .modality-action-btn {
-            background-color: #2196F3; /* Blue for modality actions */
-            color: white;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 0.75rem;
+        .modality-tag button {
+            background: none;
+            border: none;
+            color: #1E40AF;
+            font-size: 0.8em;
             cursor: pointer;
+            padding: 0 4px;
+            transition: color 0.2s ease;
+        }
+        .modality-tag button:hover {
+            color: #EF4444; /* Vermelho para excluir */
+        }
+        .modality-tag .edit-modality-input {
+            background: none;
+            border: none;
+            padding: 0;
+            margin: 0;
+            font-size: inherit;
+            font-weight: inherit;
+            color: inherit;
+            text-align: center;
+            outline: none;
+            width: auto;
+            min-width: 50px;
+            max-width: 150px;
+        }
+        .modality-tag .edit-modality-input:focus {
+            border-bottom: 1px dashed #1E40AF;
+        }
+
+        /* Estilos do Contador Regressivo (novo) */
+        .countdown-timer-container {
+            background-color: #FFFDE7; /* Fundo amarelo claro */
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); /* Sombra mais proeminente */
+            padding: 25px 20px;
+            margin-bottom: 30px; /* Margem aumentada para separação */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            border: 2px solid #FFD700; /* Borda dourada */
+        }
+        #countdownDisplay {
+            font-size: 5rem; /* Tamanho da fonte muito maior */
+            font-weight: 900; /* Extra negrito */
+            color: #D32F2F; /* Vermelho escuro para destaque */
+            letter-spacing: 4px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.2); /* Sombra mais proeminente */
+            margin-bottom: 15px;
+            font-family: 'Inter', sans-serif; /* Garantir consistência da fonte */
+        }
+        .countdown-timer-container .timer-buttons button {
+            padding: 14px 28px; /* Botões maiores */
+            font-size: 1.2rem; /* Fonte maior para os botões */
+            border-radius: 12px;
+        }
+        .countdown-timer-container .bg-blue-600 { background-color: #007BFF; } /* Azul mais brilhante */
+        .countdown-timer-container .bg-blue-600:hover:not(:disabled) { background-color: #0056b3; }
+        .countdown-timer-container .bg-purple-600 { background-color: #6F42C1; } /* Roxo profundo */
+        .countdown-timer-container .bg-purple-600:hover:not(:disabled) { background-color: #5a359b; }
+        .countdown-timer-container .bg-red-600 { background-color: #DC3545; } /* Vermelho brilhante */
+        .countdown-timer-container .bg-red-600:hover:not(:disabled) { background-color: #bd2130; }
+
+        /* Ajustes gerais de botões para consistência */
+        button {
             transition: background-color 0.2s ease, transform 0.1s ease;
-            box-shadow: none;
-            margin-left: 4px;
         }
-        .modality-tag .modality-action-btn:hover {
-            background-color: #1976D2;
-            transform: translateY(-1px);
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
         }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
     </style>
 </head>
 <body>
     <div class="scoreboard-container">
-        <h1 class="text-4xl font-extrabold text-center text-blue-800 mb-6">SENAC PAULISTA</h1>
-        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Placar dos Jogos</h1>
-        <div class="user-id-display" id="userIdDisplay">Dados salvos localmente no navegador</div>
-        <div class="status-message hidden" id="statusMessage"></div>
+        <h1 class="text-4xl font-bold text-center text-gray-800 mb-2">SENAC PAULISTA</h1>
+        <h1 class="text-3xl font-bold text-center text-gray-700 mb-6">Placar dos Jogos</h1>
 
+        <div id="userIdDisplay" class="text-right text-sm text-gray-500 mb-4"></div>
+        <div id="statusMessage" class="status-message"></div>
+
+        <!-- Seção do Cronômetro de Jogo (já existente) -->
         <div class="timer-container">
-            <div id="timerDisplay">00:00:00</div>
+            <h2 class="text-2xl font-bold text-gray-700 mb-3">Cronômetro de Jogo</h2>
+            <div id="timerDisplay" class="text-5xl font-bold text-blue-600 mb-4">00:00:00</div>
             <div class="timer-buttons">
-                <button id="startTimerBtn" class="bg-green-600 text-white">Iniciar</button>
-                <button id="pauseTimerBtn" class="bg-yellow-600 text-white">Pausar</button>
-                <button id="resetTimerBtn" class="bg-red-600 text-white">Reiniciar</button>
+                <button id="startTimerBtn" class="bg-blue-600 text-white">Iniciar</button>
+                <button id="pauseTimerBtn" class="bg-purple-600 text-white" disabled>Pausar</button>
+                <button id="resetTimerBtn" class="bg-red-600 text-white" disabled>Reiniciar</button>
             </div>
         </div>
+        <!-- Fim da Seção do Cronômetro de Jogo -->
+
+        <!-- Nova Seção do Contador Regressivo -->
+        <div class="countdown-timer-container">
+            <h2 class="text-2xl font-bold text-gray-700 mb-3">Contador Regressivo</h2>
+            <div class="flex items-center justify-center gap-3 mb-4">
+                <input type="number" id="countdownMinutesInput" placeholder="Minutos" class="p-2 border rounded-md w-24 text-center text-xl font-semibold" min="0" max="999">
+                <span class="text-2xl font-bold text-gray-600">:</span>
+                <input type="number" id="countdownSecondsInput" placeholder="Segundos" class="p-2 border rounded-md w-24 text-center text-xl font-semibold" min="0" max="59">
+            </div>
+            <div id="countdownDisplay" class="countdown-display">00:00</div>
+            <div class="timer-buttons">
+                <button id="startCountdownBtn" class="bg-blue-600 text-white" disabled>Iniciar</button>
+                <button id="pauseCountdownBtn" class="bg-purple-600 text-white" disabled>Pausar</button>
+                <button id="resetCountdownBtn" class="bg-red-600 text-white" disabled>Reiniciar</button>
+            </div>
+        </div>
+        <!-- Fim da Nova Seção do Contador Regressivo -->
+
+        <!-- Seção do Gerenciador de Modalidades -->
         <div class="modality-manager-container">
-            <h2 class="text-xl font-semibold text-gray-700 mb-4">Gerenciar Modalidades</h2>
-            <div class="flex flex-wrap items-center gap-4 mb-4">
-                <input type="text" id="newModalityName" placeholder="Nome da Nova Modalidade" class="flex-grow p-2 border rounded-md" maxlength="20">
-                <button id="addModalityBtn" class="add-team-btn modality-btn">Adicionar Modalidade</button>
+            <h2 class="text-2xl font-bold text-green-500 mb-3">Gerenciar Modalidades</h2>
+            <div class="modality-input-group">
+                <input type="text" id="newModalityName" placeholder="Nome da nova modalidade" class="p-2 border rounded-md">
+                <button id="addModalityBtn">Adicionar Modalidade</button>
             </div>
-            <div id="currentModalities" class="flex flex-wrap gap-2">
-                </div>
+            <div id="currentModalities" class="flex flex-wrap gap-2 justify-center">
+                <!-- As tags de modalidade serão renderizadas aqui -->
+            </div>
         </div>
-        <div class="grid-header" id="gridHeader">
-            </div>
+        <!-- Fim da Seção do Gerenciador de Modalidades -->
 
-        <div id="scoreboard-body">
-            <div id="loadingIndicator" class="empty-state-message hidden">Carregando placar...</div>
-            <div id="emptyState" class="empty-state-message hidden">
-                Nenhuma turma adicionada ainda. Clique em "Adicionar Turma" para começar!
-            </div>
-            </div>
 
-        <div class="button-group">
+        <h2 class="text-2xl font-bold text-center text-gray-700 mb-4 mt-8">Placar</h2>
+
+        <div id="scoreboard-grid" class="overflow-x-auto">
+            <div id="gridHeader" class="grid-header">
+                <!-- O cabeçalho da grade será preenchido dinamicamente pelo JS -->
+            </div>
+            <div id="scoreboard-body">
+                <div id="loadingIndicator" class="loading-indicator">Carregando placar...</div>
+                <div id="emptyState" class="empty-state hidden">Nenhuma turma adicionada ainda. Adicione uma turma para começar!</div>
+                <!-- As linhas das equipes serão preenchidas dinamicamente pelo JS -->
+            </div>
+        </div>
+
+        <div class="flex justify-center gap-4 mt-8">
             <button id="addTeamBtn" class="add-team-btn">Adicionar Turma</button>
             <button id="resetScoresBtn" class="reset-btn">Reiniciar Placar</button>
         </div>
-    </div>
 
-    <div id="confirmationModal" class="modal hidden">
-        <div class="modal-content">
-            <p id="modalMessage" class="text-lg font-semibold text-gray-700 mb-4"></p>
-            <div class="modal-buttons">
-                <button id="modalConfirmBtn" class="confirm-btn">Confirmar</button>
-                <button id="modalCancelBtn" class="cancel-btn">Cancelar</button>
+        <!-- Modal de Confirmação -->
+        <div id="confirmationModal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <p id="modalMessage" class="text-lg text-gray-700 mb-6">Você tem certeza?</p>
+                <div class="modal-buttons">
+                    <button id="modalConfirmBtn" class="bg-red-500 text-white">Confirmar</button>
+                    <button id="modalCancelBtn" class="bg-gray-300 text-gray-700">Cancelar</button>
+                </div>
             </div>
         </div>
+
     </div>
 
     <script type="module">
-        // Variáveis para armazenar dados localmente
+        // Variáveis globais para os dados do placar
         let allTeams = [];
-        let allModalities = [];
+        // Modalidades pré-carregadas com IDs e ordem
+        let allModalities = [
+            { id: 'mod_limao', name: 'Corrida do limão', order: 1 },
+            { id: 'mod_laranja', name: 'Dança da laranja', order: 2 },
+            { id: 'mod_pescaria', name: 'Pescaria', order: 3 },
+            { id: 'mod_argola', name: 'Jogo da argola', order: 4 },
+            { id: 'mod_palhaco', name: 'Jogo do palhaço', order: 5 },
+            { id: 'mod_rabo', name: 'Colocar o rabo no burro', order: 6 },
+            { id: 'mod_maca', name: 'Pegar a maça', order: 7 }
+        ];
 
-        const statusMessageElement = document.getElementById('statusMessage');
-        const loadingIndicator = document.getElementById('loadingIndicator');
-        const emptyStateMessage = document.getElementById('emptyState');
-        const scoreboardBody = document.getElementById('scoreboard-body');
-        const gridHeader = document.getElementById('gridHeader');
-        const userIdDisplay = document.getElementById('userIdDisplay'); // Get the user ID display element
-
-        // Timer variables
+        // Variáveis do Cronômetro de Jogo
         let timerInterval = null;
         let startTime = 0;
         let elapsedTime = 0;
         let isRunning = false;
 
+        // Variáveis do Contador Regressivo
+        let countdownInterval = null;
+        let countdownRemainingTime = 0; // em milissegundos
+        let isCountdownRunning = false;
+
+        // Elementos DOM para o cronômetro existente
         const timerDisplay = document.getElementById('timerDisplay');
         const startTimerBtn = document.getElementById('startTimerBtn');
         const pauseTimerBtn = document.getElementById('pauseTimerBtn');
         const resetTimerBtn = document.getElementById('resetTimerBtn');
 
-        // Modality variables
+        // Elementos DOM para o novo contador regressivo
+        const countdownMinutesInput = document.getElementById('countdownMinutesInput');
+        const countdownSecondsInput = document.getElementById('countdownSecondsInput');
+        const countdownDisplay = document.getElementById('countdownDisplay');
+        const startCountdownBtn = document.getElementById('startCountdownBtn');
+        const pauseCountdownBtn = document.getElementById('pauseCountdownBtn');
+        const resetCountdownBtn = document.getElementById('resetCountdownBtn');
+
+        // Elementos DOM para o placar
+        const scoreboardBody = document.getElementById('scoreboard-body');
+        const gridHeader = document.getElementById('gridHeader');
+        const addTeamBtn = document.getElementById('addTeamBtn');
+        const resetScoresBtn = document.getElementById('resetScoresBtn');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const emptyStateMessage = document.getElementById('emptyState');
+        const userIdDisplay = document.getElementById('userIdDisplay');
+        const statusMessageDiv = document.getElementById('statusMessage');
+
+        // Elementos para gerenciamento de modalidades
         const newModalityNameInput = document.getElementById('newModalityName');
         const addModalityBtn = document.getElementById('addModalityBtn');
         const currentModalitiesContainer = document.getElementById('currentModalities');
 
-        // Function to generate a simple unique ID (for local use)
+        // Elementos do modal
+        const confirmationModal = document.getElementById('confirmationModal');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+        const modalCancelBtn = document.getElementById('modalCancelBtn');
+        let onConfirmCallback = null; // Callback a ser executado na confirmação do modal
+
+        // --- Funções Auxiliares ---
         function generateUniqueId() {
             return '_' + Math.random().toString(36).substr(2, 9);
         }
 
-        // --- Persistence Functions (localStorage) ---
+        function showStatusMessage(message, type = 'status') {
+            statusMessageDiv.textContent = message;
+            statusMessageDiv.className = `status-message show ${type}`;
+            setTimeout(() => {
+                statusMessageDiv.classList.remove('show');
+            }, 3000);
+        }
+
+        function showConfirmationModal(message, onConfirm) {
+            modalMessage.textContent = message;
+            onConfirmCallback = onConfirm;
+            confirmationModal.classList.add('show');
+        }
+
+        // --- Persistência (LocalStorage) ---
         function saveData() {
             try {
                 localStorage.setItem('allTeams', JSON.stringify(allTeams));
@@ -443,9 +591,12 @@
                 localStorage.setItem('timerElapsedTime', elapsedTime.toString());
                 localStorage.setItem('timerIsRunning', isRunning.toString());
                 localStorage.setItem('timerStartTime', startTime.toString());
-                userIdDisplay.textContent = 'Dados salvos localmente no navegador'; // Update message
+                // Salvar estado do contador regressivo
+                localStorage.setItem('countdownRemainingTime', countdownRemainingTime.toString());
+                localStorage.setItem('isCountdownRunning', isCountdownRunning.toString());
+                userIdDisplay.textContent = 'Dados salvos localmente no navegador'; // Atualizar mensagem
             } catch (e) {
-                console.error("Error saving data to localStorage:", e);
+                console.error("Erro ao salvar dados no localStorage:", e);
                 showStatusMessage("Erro ao salvar dados localmente. Verifique o espaço de armazenamento do navegador.", 'error');
             }
         }
@@ -457,6 +608,10 @@
                 const storedElapsedTime = localStorage.getItem('timerElapsedTime');
                 const storedIsRunning = localStorage.getItem('timerIsRunning');
                 const storedStartTime = localStorage.getItem('timerStartTime');
+                // Carregar estado do contador regressivo
+                const storedCountdownRemainingTime = localStorage.getItem('countdownRemainingTime');
+                const storedIsCountdownRunning = localStorage.getItem('isCountdownRunning');
+
 
                 if (storedTeams) {
                     allTeams = JSON.parse(storedTeams);
@@ -465,17 +620,57 @@
                 }
 
                 if (storedModalities) {
-                    allModalities = JSON.parse(storedModalities);
-                    // Ensure modalities have an 'order' property for sorting, or add it if missing
-                    allModalities.forEach((m, index) => {
-                        if (m.order === undefined) {
-                            m.order = index + 1;
+                    // Carregar modalidades do localStorage e garantir que as novas modalidades padrão não sejam removidas
+                    const loadedModalities = JSON.parse(storedModalities);
+                    // Criar um mapa das modalidades padrão para fácil acesso
+                    const defaultModalityMap = new Map(allModalities.map(m => [m.id, m]));
+
+                    // Filtrar modalidades carregadas para remover duplicatas e garantir que as padrão existam
+                    const uniqueLoadedModalities = [];
+                    const seenModalityIds = new Set();
+
+                    // Adicionar modalidades carregadas que não são padrão ou que são padrão mas foram modificadas
+                    loadedModalities.forEach(m => {
+                        if (!defaultModalityMap.has(m.id) || defaultModalityMap.get(m.id).name !== m.name || defaultModalityMap.get(m.id).order !== m.order) {
+                            if (!seenModalityIds.has(m.id)) {
+                                uniqueLoadedModalities.push(m);
+                                seenModalityIds.add(m.id);
+                            }
                         }
                     });
+
+                    // Adicionar modalidades padrão que ainda não foram adicionadas
+                    allModalities.forEach(m => {
+                        if (!seenModalityIds.has(m.id)) {
+                            uniqueLoadedModalities.push(m);
+                            seenModalityIds.add(m.id);
+                        }
+                    });
+                    
+                    allModalities = uniqueLoadedModalities;
+
                     allModalities.sort((a, b) => a.order - b.order);
                 } else {
-                    allModalities = [];
+                    // Se não houver modalidades armazenadas, usa as padrão definidas acima
+                    allModalities.sort((a, b) => a.order - b.order);
                 }
+                
+                // Garantir que todas as equipes tenham pontuações para todas as modalidades atuais
+                allTeams.forEach(team => {
+                    allModalities.forEach(modality => {
+                        if (team.scores[modality.id] === undefined) {
+                            team.scores[modality.id] = 0;
+                        }
+                    });
+                    // Remover pontuações de modalidades que não existem mais
+                    for (const scoreId in team.scores) {
+                        if (!allModalities.some(mod => mod.id === scoreId)) {
+                            delete team.scores[scoreId];
+                        }
+                    }
+                    team.total = calculateTotal(team); // Recalcular o total após ajustes
+                });
+
 
                 if (storedElapsedTime) {
                     elapsedTime = parseInt(storedElapsedTime, 10);
@@ -489,111 +684,118 @@
                     startTime = parseInt(storedStartTime, 10);
                 }
 
+                // Carregar estado do contador regressivo
+                if (storedCountdownRemainingTime) {
+                    countdownRemainingTime = parseInt(storedCountdownRemainingTime, 10);
+                }
+                if (storedIsCountdownRunning === 'true') {
+                    isCountdownRunning = true;
+                } else {
+                    isCountdownRunning = false;
+                }
+
                 if (isRunning) {
-                    // If timer was running, restart it to continue from where it left off
-                    startTime = Date.now() - elapsedTime; // Recalculate startTime
+                    startTime = Date.now() - elapsedTime;
                     timerInterval = setInterval(updateTimerDisplay, 1000);
                     startTimerBtn.disabled = true;
                     pauseTimerBtn.disabled = false;
                 } else {
-                    // If not running, just update the display
                     updateTimerDisplay();
                 }
 
-                userIdDisplay.textContent = 'Dados carregados do navegador'; // Update message
+                // Inicializar estado do contador regressivo
+                if (isCountdownRunning) {
+                    startCountdownBtn.disabled = true;
+                    pauseCountdownBtn.disabled = false;
+                    resetCountdownBtn.disabled = false;
+                    countdownMinutesInput.disabled = true;
+                    countdownSecondsInput.disabled = true;
+                    // Reiniciar intervalo se estava a correr
+                    countdownInterval = setInterval(() => {
+                        countdownRemainingTime -= 1000;
+                        updateCountdownDisplay();
+                    }, 1000);
+                } else {
+                    // Atualizar display mesmo se não estiver a correr para mostrar o último estado
+                    updateCountdownDisplay();
+                    // Se o tempo restante for 0, desabilitar botões exceto iniciar
+                    if (countdownRemainingTime === 0) {
+                        startCountdownBtn.disabled = false;
+                        pauseCountdownBtn.disabled = true;
+                        resetCountdownBtn.disabled = true;
+                    } else {
+                        // Se houver tempo restante mas não estiver a correr, permitir iniciar/reiniciar
+                        startCountdownBtn.disabled = false;
+                        pauseCountdownBtn.disabled = true;
+                        resetCountdownBtn.disabled = false;
+                    }
+                    countdownMinutesInput.disabled = false;
+                    countdownSecondsInput.disabled = false;
+                }
+
+
+                userIdDisplay.textContent = 'Dados carregados do navegador'; // Atualizar mensagem
             } catch (e) {
-                console.error("Error loading data from localStorage:", e);
+                console.error("Erro ao carregar dados do localStorage:", e);
                 showStatusMessage("Erro ao carregar dados localmente. Os dados podem estar corrompidos.", 'error');
-                // Clear corrupted data if unable to parse
+                // Limpar dados corrompidos se não for possível analisar
                 localStorage.clear();
                 allTeams = [];
-                allModalities = [];
+                // Reverter para modalidades padrão em caso de erro de carregamento
+                allModalities = [
+                    { id: 'mod_limao', name: 'Corrida do limão', order: 1 },
+                    { id: 'mod_laranja', name: 'Dança da laranja', order: 2 },
+                    { id: 'mod_pescaria', name: 'Pescaria', order: 3 },
+                    { id: 'mod_argola', name: 'Jogo da argola', order: 4 },
+                    { id: 'mod_palhaco', name: 'Jogo do palhaço', order: 5 },
+                    { id: 'mod_rabo', name: 'Colocar o rabo no burro', order: 6 },
+                    { id: 'mod_maca', name: 'Pegar a maça', order: 7 }
+                ];
                 elapsedTime = 0;
                 isRunning = false;
                 startTime = 0;
+                // Redefinir estado do contador regressivo em caso de erro
+                countdownRemainingTime = 0;
+                isCountdownRunning = false;
             }
         }
-        // --- End Persistence Functions ---
 
 
-        // Function to display status messages
-        function showStatusMessage(message, type = 'status') {
-            statusMessageElement.textContent = message;
-            statusMessageElement.classList.remove('hidden', 'status-message', 'error-message');
-            statusMessageElement.classList.add(type === 'error' ? 'error-message' : 'status-message');
-            setTimeout(() => {
-                statusMessageElement.classList.add('hidden');
-            }, 5000); // Hide after 5 seconds
-        }
-
-        // Function to show custom confirmation modal
-        function showConfirmationModal(message, onConfirm) {
-            const modal = document.getElementById('confirmationModal');
-            const modalMessage = document.getElementById('modalMessage');
-            const modalConfirmBtn = document.getElementById('modalConfirmBtn');
-            const modalCancelBtn = document.getElementById('modalCancelBtn');
-
-            modalMessage.textContent = message;
-            modal.classList.add('visible'); // Use 'visible' class for transition
-
-            return new Promise((resolve) => {
-                const handleConfirm = () => {
-                    modal.classList.remove('visible');
-                    modalConfirmBtn.removeEventListener('click', handleConfirm);
-                    modalCancelBtn.removeEventListener('click', handleCancel);
-                    onConfirm(); // Execute the action if confirmed
-                    resolve(true);
-                };
-
-                const handleCancel = () => {
-                    modal.classList.remove('visible');
-                    modalConfirmBtn.removeEventListener('click', handleConfirm);
-                    modalCancelBtn.removeEventListener('click', handleCancel);
-                    resolve(false);
-                };
-
-                modalConfirmBtn.addEventListener('click', handleConfirm);
-                modalCancelBtn.addEventListener('click', handleCancel);
-            });
-        }
-
-        // Timer functions
+        // --- Funções do Cronômetro de Jogo ---
         function formatTime(ms) {
             const totalSeconds = Math.floor(ms / 1000);
-            const hours = Math.floor((totalSeconds % 86400) / 3600); // Max 24 hours
+            const hours = Math.floor(totalSeconds / 3600);
             const minutes = Math.floor((totalSeconds % 3600) / 60);
             const seconds = totalSeconds % 60;
-
             const pad = (num) => num.toString().padStart(2, '0');
             return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
         }
 
         function updateTimerDisplay() {
-            const currentTime = Date.now();
-            const currentElapsedTime = elapsedTime + (isRunning ? (currentTime - startTime) : 0);
-            timerDisplay.textContent = formatTime(currentElapsedTime);
-            saveData(); // Save timer state on update
+            elapsedTime = Date.now() - startTime;
+            timerDisplay.textContent = formatTime(elapsedTime);
+            saveData();
         }
 
         function startTimer() {
             if (!isRunning) {
-                startTime = Date.now() - elapsedTime;
-                timerInterval = setInterval(updateTimerDisplay, 1000); // Update every second
                 isRunning = true;
+                startTime = Date.now() - elapsedTime; // Ajustar startTime para contabilizar o tempo já decorrido
+                timerInterval = setInterval(updateTimerDisplay, 1000);
                 startTimerBtn.disabled = true;
                 pauseTimerBtn.disabled = false;
-                saveData(); // Save timer state
+                resetTimerBtn.disabled = false;
+                saveData();
             }
         }
 
         function pauseTimer() {
             if (isRunning) {
                 clearInterval(timerInterval);
-                elapsedTime = Date.now() - startTime;
                 isRunning = false;
                 startTimerBtn.disabled = false;
                 pauseTimerBtn.disabled = true;
-                saveData(); // Save timer state
+                saveData();
             }
         }
 
@@ -604,379 +806,343 @@
             timerDisplay.textContent = formatTime(0);
             startTimerBtn.disabled = false;
             pauseTimerBtn.disabled = true;
-            saveData(); // Save timer state
+            resetTimerBtn.disabled = true;
+            saveData();
         }
 
-        // Add event listeners for timer buttons
-        startTimerBtn.addEventListener('click', startTimer);
-        pauseTimerBtn.addEventListener('click', pauseTimer);
-        resetTimerBtn.addEventListener('click', resetTimer);
+        // --- Funções do Contador Regressivo ---
+        function formatCountdownTime(ms) {
+            const totalSeconds = Math.max(0, Math.floor(ms / 1000)); // Garantir que não seja negativo
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            const pad = (num) => num.toString().padStart(2, '0');
+            return `${pad(minutes)}:${pad(seconds)}`;
+        }
 
-        // Function to calculate total score for a team
+        function updateCountdownDisplay() {
+            countdownDisplay.textContent = formatCountdownTime(countdownRemainingTime);
+            if (countdownRemainingTime <= 0) {
+                clearInterval(countdownInterval);
+                isCountdownRunning = false;
+                startCountdownBtn.disabled = false;
+                pauseCountdownBtn.disabled = true;
+                resetCountdownBtn.disabled = true; // Desabilitar reset até que um novo tempo seja definido ou iniciado
+                countdownMinutesInput.disabled = false; // Habilitar inputs
+                countdownSecondsInput.disabled = false;
+                showStatusMessage("Contador Regressivo Concluído!", 'status');
+                // Opcionalmente, reproduzir um som ou alerta visual aqui
+            }
+            saveData(); // Salvar estado do contador regressivo
+        }
+
+        function startCountdown() {
+            let initialMinutes = parseInt(countdownMinutesInput.value) || 0;
+            let initialSeconds = parseInt(countdownSecondsInput.value) || 0;
+
+            // Se não estiver a correr E não houver tempo restante, definir o tempo inicial a partir dos inputs
+            if (!isCountdownRunning && countdownRemainingTime <= 0) {
+                if (initialMinutes === 0 && initialSeconds === 0) {
+                    showStatusMessage("Por favor, defina um tempo para o contador regressivo.", 'error');
+                    return;
+                }
+                countdownRemainingTime = (initialMinutes * 60 + initialSeconds) * 1000;
+            } else if (!isCountdownRunning && countdownRemainingTime > 0) {
+                // Se pausado e houver tempo restante, apenas continuar de onde parou
+            }
+
+            if (!isCountdownRunning) {
+                isCountdownRunning = true;
+                startCountdownBtn.disabled = true;
+                pauseCountdownBtn.disabled = false;
+                resetCountdownBtn.disabled = false; // Habilitar reset uma vez iniciado
+                countdownMinutesInput.disabled = true; // Desabilitar inputs quando a correr
+                countdownSecondsInput.disabled = true;
+
+                countdownInterval = setInterval(() => {
+                    countdownRemainingTime -= 1000;
+                    if (countdownRemainingTime < 0) countdownRemainingTime = 0; // Prevenir tempo negativo
+                    updateCountdownDisplay();
+                }, 1000);
+                saveData();
+            }
+        }
+
+        function pauseCountdown() {
+            if (isCountdownRunning) {
+                clearInterval(countdownInterval);
+                isCountdownRunning = false;
+                startCountdownBtn.disabled = false;
+                pauseCountdownBtn.disabled = true;
+                saveData();
+            }
+        }
+
+        function resetCountdown() {
+            clearInterval(countdownInterval);
+            countdownRemainingTime = 0;
+            isCountdownRunning = false;
+            countdownDisplay.textContent = formatCountdownTime(0);
+            startCountdownBtn.disabled = false; // Habilitar botão iniciar
+            pauseCountdownBtn.disabled = true;
+            resetCountdownBtn.disabled = true;
+            countdownMinutesInput.disabled = false; // Habilitar inputs ao reiniciar
+            countdownSecondsInput.value = ''; // Limpar inputs
+            countdownMinutesInput.value = ''; // Limpar inputs
+            saveData();
+        }
+
+
+        // --- Lógica do Placar ---
         function calculateTotal(teamData) {
-            let total = 0;
-            if (teamData.scores) {
-                for (const modalityId in teamData.scores) {
-                    total += parseInt(teamData.scores[modalityId] || 0);
-                }
-            }
-            return total;
+            return Object.values(teamData.scores).reduce((sum, score) => sum + score, 0);
         }
 
-        // Function to render a single team row
+        let debounceTimeout = {}; // Para gerenciar o debouncing para mudanças nos inputs
+
         function renderTeamRow(team) {
-            const row = document.createElement('div');
-            row.className = 'grid-row';
-            row.dataset.id = team.id; // Store unique ID
-
-            // Set grid-template-columns dynamically based on modalities
+            const rowElement = document.createElement('div');
+            rowElement.className = 'grid-row';
             const numModalityColumns = allModalities.length;
-            // Adjusted grid-template-columns to accommodate both Edit and Remove buttons
-            row.style.gridTemplateColumns = `1.5fr repeat(${numModalityColumns}, 1fr) 1fr 0.75fr`; // Team Name, Modalities, Total, Buttons
+            rowElement.style.gridTemplateColumns = `1.5fr repeat(${numModalityColumns}, 1fr) 1fr 0.75fr`;
 
-            let modalityInputsHtml = '';
+            const teamNameCell = document.createElement('div');
+            teamNameCell.className = 'grid-cell';
+            const teamNameInput = document.createElement('input');
+            teamNameInput.type = 'text';
+            teamNameInput.value = team.name;
+            teamNameInput.className = 'team-name-input';
+            teamNameInput.dataset.teamId = team.id;
+            teamNameInput.placeholder = 'Nome da Turma';
+
+            // Debounce para input de nome da equipe
+            teamNameInput.addEventListener('input', (e) => {
+                const updatedName = e.target.value;
+                const teamIndex = allTeams.findIndex(t => t.id === team.id);
+                if (teamIndex !== -1) {
+                    allTeams[teamIndex].name = updatedName;
+                    saveData(); // Salvar imediatamente após a atualização
+                }
+            });
+            teamNameCell.appendChild(teamNameInput);
+            rowElement.appendChild(teamNameCell);
+
             allModalities.forEach(modality => {
-                const score = team.scores ? (team.scores[modality.id] || 0) : 0;
-                modalityInputsHtml += `
-                    <div class="grid-cell">
-                        <input type="number" class="score-input" data-modality-id="${modality.id}" value="${score}" title="Pontuação para ${modality.name}">
-                    </div>
-                `;
+                const scoreCell = document.createElement('div');
+                scoreCell.className = 'grid-cell';
+                const scoreInput = document.createElement('input');
+                scoreInput.type = 'number';
+                scoreInput.value = team.scores[modality.id] !== undefined ? team.scores[modality.id] : 0;
+                scoreInput.className = 'score-input';
+                scoreInput.min = "0";
+                scoreInput.dataset.teamId = team.id;
+                scoreInput.dataset.modalityId = modality.id;
+
+                scoreInput.addEventListener('input', (e) => {
+                    clearTimeout(debounceTimeout[team.id]);
+                    debounceTimeout[team.id] = setTimeout(() => {
+                        const newScore = parseInt(e.target.value) || 0;
+                        const currentTeam = allTeams.find(t => t.id === team.id);
+                        if (currentTeam) {
+                            currentTeam.scores[modality.id] = newScore;
+                            currentTeam.total = calculateTotal(currentTeam);
+                            saveData();
+                            renderScoreboard(); // Re-renderizar para atualizar totais e ordenação
+                        }
+                    }, 500); // Tempo de debounce em milissegundos
+                });
+                scoreCell.appendChild(scoreInput);
+                rowElement.appendChild(scoreCell);
             });
 
-            row.innerHTML = `
-                <div class="grid-cell team-name-cell">
-                    <span class="team-name-display">${team.name}</span>
-                    <input type="text" class="team-name-input w-full hidden" value="${team.name}" placeholder="Nome da Equipe" maxlength="30" title="Nome da Equipe">
-                </div>
-                ${modalityInputsHtml}
-                <div class="grid-cell total-score">${team.total || 0}</div>
-                <div class="grid-cell relative flex flex-col items-center justify-center gap-1">
-                    <button class="edit-team-btn w-full" title="Editar Turma">Editar</button>
-                    <button class="remove-team-btn w-full" title="Remover Turma">Remover</button>
-                    <span class="save-feedback absolute right-0 top-1/2 -translate-y-1/2">✔ Salvo!</span>
-                </div>
-            `;
-            scoreboardBody.appendChild(row);
+            const totalScoreCell = document.createElement('div');
+            totalScoreCell.className = 'grid-cell total-score';
+            totalScoreCell.textContent = team.total;
+            rowElement.appendChild(totalScoreCell);
 
-            // Get elements for editing
-            const teamNameDisplay = row.querySelector('.team-name-display');
-            const teamNameInput = row.querySelector('.team-name-input');
-            const editButton = row.querySelector('.edit-team-btn');
-            const removeButton = row.querySelector('.remove-team-btn'); // Get the new remove button
-
-            // Add event listeners for score inputs
-            const scoreInputs = row.querySelectorAll('.score-input');
-            scoreInputs.forEach(input => {
-                let timeoutId;
-                input.addEventListener('input', () => {
-                    clearTimeout(timeoutId);
-                    timeoutId = setTimeout(() => {
-                        updateTeamScore(team.id, row);
-                    }, 500); // Debounce input to avoid too many updates
+            const actionsCell = document.createElement('div');
+            actionsCell.className = 'grid-cell action-buttons';
+            const removeBtn = document.createElement('button');
+            removeBtn.textContent = 'Remover';
+            removeBtn.className = 'remove-team-btn';
+            removeBtn.addEventListener('click', () => {
+                showConfirmationModal(`Tem certeza que deseja remover a turma "${team.name}"?`, () => {
+                    deleteTeam(team.id);
                 });
             });
+            actionsCell.appendChild(removeBtn);
+            rowElement.appendChild(actionsCell);
 
-            // Event listener for the Edit button
-            if (editButton) {
-                editButton.addEventListener('click', () => {
-                    // Toggle visibility of display span and input field
-                    teamNameDisplay.classList.add('hidden');
-                    teamNameInput.classList.remove('hidden');
-                    teamNameInput.focus();
-                });
-            } else {
-                console.error("[renderTeamRow] Edit button not found for team:", team.id);
-            }
-
-            // Event listener for the Remove button
-            if (removeButton) {
-                removeButton.addEventListener('click', () => {
-                    console.log(`[renderTeamRow] Remove button clicked for team ID: ${team.id}`);
-                    showConfirmationModal('Tem certeza que deseja remover esta turma? Esta ação é irreversível.', () => {
-                        console.log(`[deleteTeam] Confirmação recebida para remover turma com ID: ${team.id}`);
-                        deleteTeam(team.id);
-                    });
-                });
-            } else {
-                console.error("[renderTeamRow] Remove button not found for team:", team.id);
-            }
-
-            // Event listener for saving team name on blur or Enter
-            const saveTeamName = () => {
-                const newName = teamNameInput.value.trim();
-                if (newName && newName !== teamNameDisplay.textContent) {
-                    updateTeamScore(team.id, row); // This will update the name
-                }
-                // Revert to display mode
-                teamNameDisplay.textContent = teamNameInput.value;
-                teamNameDisplay.classList.remove('hidden');
-                teamNameInput.classList.add('hidden');
-            };
-
-            teamNameInput.addEventListener('blur', saveTeamName);
-            teamNameInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    saveTeamName();
-                }
-            });
+            scoreboardBody.appendChild(rowElement);
         }
 
-        // Function to update team score in local array
-        function updateTeamScore(teamId, rowElement) {
-            const teamIndex = allTeams.findIndex(t => t.id === teamId);
-            if (teamIndex === -1) {
-                showStatusMessage("Erro: Turma não encontrada.", 'error');
-                return;
-            }
-
-            const teamName = rowElement.querySelector('.team-name-input').value;
-            const updatedScores = {};
-            rowElement.querySelectorAll('.score-input').forEach(input => {
-                const modalityId = input.dataset.modalityId;
-                updatedScores[modalityId] = parseInt(input.value) || 0;
-            });
-
-            const newTeamData = {
-                id: teamId,
-                name: teamName,
-                scores: updatedScores,
-            };
-            newTeamData.total = calculateTotal(newTeamData); // Recalculate total
-
-            allTeams[teamIndex] = newTeamData; // Update the local array
-            saveData(); // Save data after every update
-            renderScoreboard(); // Re-render the entire scoreboard to update totals and order
-
-            // Show save feedback - this part might be tricky with full re-renders
-            // For now, let's keep it simple, as the whole row is recreated.
-            // A more advanced solution would be to update the specific cell without re-rendering the whole row.
-            // If you want feedback, you might need to find the new row after re-render based on team.id
-            const updatedRowElement = scoreboardBody.querySelector(`[data-id="${teamId}"]`);
-            if (updatedRowElement) {
-                const saveFeedback = updatedRowElement.querySelector('.save-feedback');
-                if (saveFeedback) {
-                     saveFeedback.classList.add('visible');
-                     setTimeout(() => {
-                         saveFeedback.classList.remove('visible');
-                     }, 1500);
-                }
-            }
-        }
-
-        // Function to add a new team
-        document.getElementById('addTeamBtn').addEventListener('click', () => {
-            const newTeamId = generateUniqueId();
-            const initialScores = {};
-            allModalities.forEach(modality => {
-                initialScores[modality.id] = 0;
-            });
-
+        function addTeam() {
             const newTeam = {
-                id: newTeamId,
-                name: `Nova Equipe ${allTeams.length + 1}`,
-                scores: initialScores,
-                total: 0,
+                id: generateUniqueId(),
+                name: `Turma ${allTeams.length + 1}`,
+                scores: {},
+                total: 0
             };
+            // Inicializar pontuações para todas as modalidades atuais para 0
+            allModalities.forEach(modality => {
+                newTeam.scores[modality.id] = 0;
+            });
+            newTeam.total = calculateTotal(newTeam); // Calcular total inicial
             allTeams.push(newTeam);
-            saveData(); // Save data after adding team
-            renderScoreboard(); // Re-render to show the new team
-            showStatusMessage("Nova turma adicionada com sucesso!");
-        });
+            saveData();
+            renderScoreboard(); // Re-renderizar para exibir nova equipe e atualizar ordenação
+        }
 
-        // Function to delete a team
         function deleteTeam(teamId) {
             allTeams = allTeams.filter(team => team.id !== teamId);
-            saveData(); // Save data after deletion
-            renderScoreboard(); // Re-render after deletion
-            showStatusMessage("Turma eliminada com sucesso!");
+            saveData();
+            renderScoreboard();
+            showStatusMessage("Turma removida com sucesso!", 'status');
         }
 
-        // Function to reset all scores
-        document.getElementById('resetScoresBtn').addEventListener('click', () => {
-            showConfirmationModal('Tem certeza que deseja reiniciar todas as pontuações para zero? Esta ação é irreversível.', () => {
-                allTeams.forEach(team => {
-                    for (const modalityId in team.scores) {
-                        team.scores[modalityId] = 0;
-                    }
-                    team.total = calculateTotal(team); // Recalculate total
-                });
-                saveData(); // Save data after reset
-                renderScoreboard(); // Re-render with reset scores
-                showStatusMessage("Todas as pontuações foram reiniciadas com sucesso!");
+        function resetScores() {
+            allTeams.forEach(team => {
+                for (const modalityId in team.scores) {
+                    team.scores[modalityId] = 0;
+                }
+                team.total = 0;
             });
-        });
+            saveData();
+            renderScoreboard();
+            showStatusMessage("Placar reiniciado com sucesso!", 'status');
+        }
 
-        // Modality Management Functions
+        // --- Gerenciamento de Modalidades ---
         function addModality() {
-            const modalityName = newModalityNameInput.value.trim();
-            if (!modalityName) {
-                showStatusMessage("O nome da modalidade não pode estar vazio.", 'error');
+            const name = newModalityNameInput.value.trim();
+            if (name === "") {
+                showStatusMessage("O nome da modalidade não pode ser vazio.", 'error');
                 return;
             }
-            if (allModalities.some(m => m.name.toLowerCase() === modalityName.toLowerCase())) {
-                showStatusMessage("Uma modalidade com este nome já existe.", 'error');
+            if (allModalities.some(m => m.name.toLowerCase() === name.toLowerCase())) {
+                showStatusMessage("Esta modalidade já existe.", 'error');
                 return;
             }
 
-            const newModalityId = generateUniqueId();
             const newModality = {
-                id: newModalityId,
-                name: modalityName,
-                order: allModalities.length + 1,
+                id: generateUniqueId(),
+                name: name,
+                order: allModalities.length + 1 // Ordenação simples
             };
             allModalities.push(newModality);
-            allModalities.sort((a,b) => a.order - b.order); // Ensure order is maintained
-            saveData(); // Save data after adding modality
-            renderCurrentModalities(); // Re-render modality tags
 
-            // Update existing teams with the new modality score initialized to 0
+            // Adicionar esta nova modalidade com pontuação 0 a todas as equipes existentes
             allTeams.forEach(team => {
-                team.scores[newModalityId] = 0;
-                team.total = calculateTotal(team); // Recalculate total
+                team.scores[newModality.id] = 0;
+                team.total = calculateTotal(team); // Recalcular total para equipes existentes
             });
-            renderScoreboard(); // Re-render teams with new column
-            showStatusMessage(`Modalidade "${modalityName}" adicionada com sucesso!`);
-            newModalityNameInput.value = ''; // Clear input
+
+            newModalityNameInput.value = '';
+            saveData();
+            renderCurrentModalities();
+            renderScoreboard(); // Re-renderizar placar para mostrar nova coluna de modalidade
+            showStatusMessage("Modalidade adicionada com sucesso!", 'status');
         }
 
         function updateModality(modalityId, newName) {
-            const trimmedName = newName.trim();
-            if (!trimmedName) {
-                showStatusMessage("O nome da modalidade não pode estar vazio.", 'error');
-                return;
+            const modality = allModalities.find(m => m.id === modalityId);
+            if (modality) {
+                const trimmedName = newName.trim();
+                if (trimmedName === "") {
+                    showStatusMessage("O nome da modalidade não pode ser vazio.", 'error');
+                    return false;
+                }
+                if (allModalities.some(m => m.id !== modalityId && m.name.toLowerCase() === trimmedName.toLowerCase())) {
+                    showStatusMessage("Esta modalidade já existe.", 'error');
+                    return false;
+                }
+                modality.name = trimmedName;
+                saveData();
+                renderScoreboard(); // Re-renderizar placar para cabeçalho atualizado
+                showStatusMessage("Modalidade atualizada com sucesso!", 'status');
+                return true;
             }
-            if (allModalities.some(m => m.id !== modalityId && m.name.toLowerCase() === trimmedName.toLowerCase())) {
-                showStatusMessage("Uma modalidade com este nome já existe.", 'error');
-                return;
-            }
-
-            const modalityIndex = allModalities.findIndex(m => m.id === modalityId);
-            if (modalityIndex !== -1) {
-                allModalities[modalityIndex].name = trimmedName;
-                saveData(); // Save data after updating modality
-                renderCurrentModalities(); // Re-render modality tags
-                renderScoreboard(); // Re-render scoreboard header and team rows with updated modality name
-                showStatusMessage(`Modalidade atualizada para "${trimmedName}" com sucesso!`);
-            }
+            return false;
         }
 
         function deleteModality(modalityId, modalityName) {
-            showConfirmationModal(`Tem certeza que deseja excluir a modalidade "${modalityName}"? Isso removerá todas as pontuações associadas a ela para todas as turmas.`, () => {
-                allModalities = allModalities.filter(modality => modality.id !== modalityId);
-                saveData(); // Save data after deleting modality
-                renderCurrentModalities(); // Re-render modality tags
+            showConfirmationModal(`Tem certeza que deseja remover a modalidade "${modalityName}"? Isso removerá todas as pontuações associadas.`, () => {
+                allModalities = allModalities.filter(m => m.id !== modalityId);
 
-                // Remove modality score from all teams
+                // Remover pontuações para esta modalidade de todas as equipes
                 allTeams.forEach(team => {
-                    if (team.scores.hasOwnProperty(modalityId)) {
-                        delete team.scores[modalityId]; // Remove the score for this modality
-                    }
-                    team.total = calculateTotal(team); // Recalculate total
+                    delete team.scores[modalityId];
+                    team.total = calculateTotal(team); // Recalcular total
                 });
-                renderScoreboard(); // Re-render teams with removed column
-                showStatusMessage(`Modalidade "${modalityName}" eliminada com sucesso!`);
+
+                saveData();
+                renderCurrentModalities();
+                renderScoreboard(); // Re-renderizar placar para remover coluna
+                showStatusMessage("Modalidade removida com sucesso!", 'status');
             });
         }
 
-        addModalityBtn.addEventListener('click', addModality);
-
-        // Function to render current modalities as tags
         function renderCurrentModalities() {
-            currentModalitiesContainer.innerHTML = '';
+            currentModalitiesContainer.innerHTML = ''; // Limpar tags existentes
             allModalities.forEach(modality => {
-                const tag = document.createElement('span');
+                const tag = document.createElement('div');
                 tag.className = 'modality-tag';
-                tag.dataset.modalityId = modality.id; // Store ID for editing/deleting
 
-                const nameDisplay = document.createElement('span');
-                nameDisplay.className = 'modality-name-display';
-                nameDisplay.textContent = modality.name;
-                tag.appendChild(nameDisplay);
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = modality.name;
+                nameSpan.style.cursor = 'pointer'; // Indicar que é editável
+                nameSpan.title = 'Clique para editar';
 
-                // Edit button for modality
-                const editBtn = document.createElement('button');
-                editBtn.className = 'modality-action-btn';
-                editBtn.title = 'Editar Modalidade';
-                editBtn.textContent = 'Editar';
-                editBtn.dataset.modalityId = modality.id;
-                tag.appendChild(editBtn);
+                const editInput = document.createElement('input');
+                editInput.type = 'text';
+                editInput.className = 'edit-modality-input hidden';
+                editInput.value = modality.name;
 
-                // Delete button for modality
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'modality-action-btn';
-                deleteBtn.title = 'Excluir Modalidade';
-                deleteBtn.textContent = 'Excluir';
-                deleteBtn.dataset.modalityId = modality.id;
-                deleteBtn.dataset.modalityName = modality.name;
-                tag.appendChild(deleteBtn);
+                nameSpan.addEventListener('click', () => {
+                    nameSpan.classList.add('hidden');
+                    editInput.classList.remove('hidden');
+                    editInput.focus();
+                });
 
-                currentModalitiesContainer.appendChild(tag);
-
-                // Event listener for the Edit button
-                editBtn.addEventListener('click', () => {
-                    // Prevent editing if already editing another tag
-                    if (document.querySelector('.modality-tag.editing')) {
-                        showStatusMessage("Já está a editar outra modalidade. Salve ou cancele primeiro.", "status");
-                        return;
+                const saveEdit = () => {
+                    const success = updateModality(modality.id, editInput.value);
+                    if (success) {
+                        nameSpan.textContent = editInput.value;
+                    } else {
+                        // Se a atualização falhou (ex: nome vazio/duplicado), reverter input para o original
+                        editInput.value = modality.name;
                     }
+                    editInput.classList.add('hidden');
+                    nameSpan.classList.remove('hidden');
+                };
 
-                    tag.classList.add('editing'); // Add class to indicate editing state
-
-                    const input = document.createElement('input');
-                    input.type = 'text';
-                    input.className = 'modality-name-input';
-                    input.value = nameDisplay.textContent;
-                    input.maxLength = 20; // Limit input length
-                    input.title = 'Editar Nome da Modalidade';
-
-                    // Replace text span with input
-                    tag.replaceChild(input, nameDisplay);
-                    input.focus();
-
-                    // Hide buttons during editing
-                    editBtn.classList.add('hidden');
-                    deleteBtn.classList.add('hidden');
-
-                    const saveChanges = () => {
-                        const newName = input.value.trim();
-                        if (newName && newName !== modality.name) { // Only update if name has changed
-                            updateModality(modality.id, newName);
-                        } else {
-                            // If name didn't change or was empty, just revert
-                            tag.classList.remove('editing');
-                            tag.replaceChild(nameDisplay, input); // Replace input with text span
-                            nameDisplay.textContent = modality.name; // Revert to original name
-                            editBtn.classList.remove('hidden');
-                            deleteBtn.classList.remove('hidden');
-                        }
-                    };
-
-                    input.addEventListener('blur', saveChanges); // Save on blur
-                    input.addEventListener('keypress', (e) => {
-                        if (e.key === 'Enter') {
-                            input.blur(); // Trigger blur to save changes
-                        }
-                    });
+                editInput.addEventListener('blur', saveEdit);
+                editInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        editInput.blur(); // Disparar blur para salvar
+                    }
                 });
 
-                // Add event listener to delete modality button
-                deleteBtn.addEventListener('click', (event) => {
-                    const modalityId = event.target.dataset.modalityId;
-                    const modalityName = event.target.dataset.modalityName;
-                    deleteModality(modalityId, modalityName);
-                });
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'x'; // 'x' pequeno para excluir
+                deleteBtn.className = 'modality-delete-btn';
+                deleteBtn.title = 'Excluir modalidade';
+                deleteBtn.addEventListener('click', () => deleteModality(modality.id, modality.name));
+
+                tag.appendChild(nameSpan);
+                tag.appendChild(editInput);
+                tag.appendChild(deleteBtn);
+                currentModalitiesContainer.appendChild(tag);
             });
         }
 
-        // Function to render the entire scoreboard from local data
+
+        // --- Função Principal de Renderização do Placar ---
         function renderScoreboard() {
-            loadingIndicator.classList.add('hidden'); // Hide loading indicator once data is ready
+            loadingIndicator.classList.add('hidden');
+            scoreboardBody.innerHTML = ''; // Limpar placar atual
+            gridHeader.innerHTML = ''; // Limpar cabeçalho atual também
 
-            scoreboardBody.innerHTML = ''; // Clear current display
-            gridHeader.innerHTML = ''; // Clear header as well
-
-            // Render header dynamically
+            // Renderizar cabeçalho dinamicamente
             const numModalityColumns = allModalities.length;
             gridHeader.style.gridTemplateColumns = `1.5fr repeat(${numModalityColumns}, 1fr) 1fr 0.75fr`;
             gridHeader.innerHTML = `
@@ -985,7 +1151,7 @@
                 <div class="grid-cell header-orange-text">TOTAL</div>
                 <div class="grid-cell"></div> `;
 
-            // Sort teams by total score in descending order
+            // Ordenar equipes pelo total de pontuação em ordem decrescente
             allTeams.sort((a, b) => b.total - a.total);
 
             if (allTeams.length === 0) {
@@ -993,17 +1159,81 @@
             } else {
                 emptyStateMessage.classList.add('hidden');
                 allTeams.forEach(team => {
-                    renderTeamRow(team); // This function now attaches listeners directly to the new row
+                    renderTeamRow(team); // Esta função agora anexa listeners diretamente à nova linha
                 });
             }
         }
 
-        // Initial load of the scoreboard when the DOM is ready
+        // --- Listeners de Eventos ---
+        // Botões do Cronômetro de Jogo
+        startTimerBtn.addEventListener('click', startTimer);
+        pauseTimerBtn.addEventListener('click', pauseTimer);
+        resetTimerBtn.addEventListener('click', resetTimer);
+
+        // Botões do Contador Regressivo
+        modalConfirmBtn.addEventListener('click', () => {
+            if (onConfirmCallback) {
+                onConfirmCallback();
+            }
+            confirmationModal.classList.remove('show');
+            onConfirmCallback = null; // Limpar callback
+        });
+
+        modalCancelBtn.addEventListener('click', () => {
+            confirmationModal.classList.remove('show');
+            onConfirmCallback = null; // Limpar callback
+        });
+
+        startCountdownBtn.addEventListener('click', startCountdown);
+        pauseCountdownBtn.addEventListener('click', pauseCountdown);
+        resetCountdownBtn.addEventListener('click', resetCountdown);
+
+        // Listener de mudança de input para habilitar o botão iniciar do contador regressivo
+        countdownMinutesInput.addEventListener('input', () => {
+            const minutes = parseInt(countdownMinutesInput.value) || 0;
+            const seconds = parseInt(countdownSecondsInput.value) || 0;
+            if (!isCountdownRunning && (minutes > 0 || seconds > 0)) {
+                startCountdownBtn.disabled = false;
+            } else if (!isCountdownRunning && minutes === 0 && seconds === 0) {
+                 startCountdownBtn.disabled = true;
+            }
+            saveData(); // Salvar valores de input
+        });
+        countdownSecondsInput.addEventListener('input', () => {
+            const minutes = parseInt(countdownMinutesInput.value) || 0;
+            const seconds = parseInt(countdownSecondsInput.value) || 0;
+            if (!isCountdownRunning && (minutes > 0 || seconds > 0)) {
+                startCountdownBtn.disabled = false;
+            } else if (!isCountdownRunning && minutes === 0 && seconds === 0) {
+                 startCountdownBtn.disabled = true;
+            }
+            saveData(); // Salvar valores de input
+        });
+
+
+        // Botões de Ação do Placar
+        addTeamBtn.addEventListener('click', addTeam);
+        resetScoresBtn.addEventListener('click', () => {
+            showConfirmationModal("Tem certeza que deseja reiniciar o placar (zerar todas as pontuações)?", resetScores);
+        });
+
+        // Botões do Gerenciador de Modalidades
+        addModalityBtn.addEventListener('click', addModality);
+
+        // Carregamento inicial do placar quando o DOM estiver pronto
         document.addEventListener('DOMContentLoaded', () => {
-            loadData(); // Load data first
+            loadData(); // Carregar dados primeiro, o que também inicializa os estados do cronômetro/contador
             renderScoreboard();
-            renderCurrentModalities(); // Also render modalities
-            // Timer button state will be handled by loadData based on stored isRunning
+            renderCurrentModalities(); // Também renderizar modalidades
+
+            // Definir o estado inicial dos inputs do contador regressivo a partir dos dados carregados
+            if (countdownRemainingTime > 0 && !isCountdownRunning) {
+                countdownMinutesInput.value = Math.floor(countdownRemainingTime / 60000);
+                countdownSecondsInput.value = Math.floor((countdownRemainingTime % 60000) / 1000);
+                startCountdownBtn.disabled = false; // Habilitar iniciar se houver tempo restante
+            } else if (countdownRemainingTime === 0 && !isCountdownRunning) {
+                startCountdownBtn.disabled = true; // Desabilitar iniciar se nenhum tempo for definido
+            }
         });
     </script>
 </body>
